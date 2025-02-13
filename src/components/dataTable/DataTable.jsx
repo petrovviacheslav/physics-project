@@ -13,6 +13,9 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     const [currentPoint, setCurrentPoint] = useState(new THREE.Mesh());
     const [currentVelocity, setCurrentVelocity] = useState(new THREE.ArrowHelper());
 
+    // TODO: надо будет создавать массив для всех точек, у каждой из которых хранится currentPoint, currentVelocity
+    // или как это делать?
+
     function addOnGraph(e, id) {
         e.preventDefault();
         scene.remove(currentPoint);

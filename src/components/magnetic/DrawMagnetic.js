@@ -5,8 +5,6 @@ import {addPositionAndVelocity} from "../../util/addsToStore";
 
 export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTime, addConstructionsFlag, scene, camera, renderer, dispatch) {
     console.log('===================');
-    console.log('===================');
-    console.log('===================');
     console.log('DrawMagnetic');
     // Константы и данные
     const powTenQ = 1e-14;
@@ -59,11 +57,14 @@ export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTi
         const D = -(normalization_B.x * r0.x + normalization_B.y * r0.y + normalization_B.z * r0.z);
 
         // =======================
-        // возможно это придётся делать это на каждой итерации, если добавлять новые внешние силы,
+        // возможно это придётся делать на каждой итерации, если добавлять новые внешние силы,
         // а после изменения скорости приводить её к только что подсчитанному projection.length()
         const scalarMultiply = v0.x * B.x + v0.y * B.y + v0.z * B.z;
         const h_projection_v = B.clone().multiplyScalar(scalarMultiply / B.lengthSq());
         const projection = v0.clone().sub(h_projection_v);
+
+        // TODO: добавить проверку, что скорость > 10^-8 (машинная ошибка) иначе частица тупо стоит на месте
+        // TODO: добавить проверку, что projection.length() > 10^-8, иначе значит V и B сонаправлены, следовательно частица движется только под действием скорости
 
         // ==========================
         // радиус получается = как для той ситуации когда вектор скорости перпендикулярен вектору индукции
@@ -123,14 +124,6 @@ export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTi
                 // сюда можно дописать влияние других сил на эту точку и изменение скорости и положения под действием них
 
                 positions_center.push(curPosit.clone().add(curDirectionForce.clone().normalize().multiplyScalar(mainR)));
-
-                // if (i % count_of_elem_one_circle === 0 || i < 2) {
-                //     console.log(i + " v_i=" + curV.length());
-                //     console.log(i + " a_i=" + curAcceleration.length());
-                //     console.log(i + " r_i=" + curV.length() ** 2 / curAcceleration.length());
-                //     console.table([curPosit, curV]);
-                // }
-
                 positions2.push(curPosit.clone());
                 addPositionAndVelocity(i, curPosit.clone(), curV.clone(), allTime * i / ((360 / count_of_elem_one_circle) * allTime / period), 4, dispatch);
 
@@ -176,7 +169,6 @@ export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTi
                 // );
                 const newPosition = new_start_B.clone().sub(new_R_vector);
                 positions.push(newPosition.clone());
-                //addPositionAndVelocity(i, newPosition, newVelocity, allTime * i / ((360/count_of_elem_one_circle) * allTime / period), 4, dispatch);
             }
 
             if (addConstructionsFlag) {
@@ -189,7 +181,7 @@ export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTi
                 else addVector(point_start_B.clone(), point_start_B.clone().add(normalization_B.clone()), 0xEE82EE, scene);
                 // Добавление начального вектора скорости
                 addVector(r0.clone(), r0.clone().add(v0.clone().divideScalar(powTenV0)), 0xffff00, scene);
-                // Добавление R_vector
+                // Добавление R_vector (начальный)
                 addVector(r0.clone(), r0.clone().add(R_vector.clone()), 0xffc0cb, scene);
                 // траектория центральных точек
                 addTrajectory(positions_center, "green", scene)

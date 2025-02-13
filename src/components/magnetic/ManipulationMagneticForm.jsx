@@ -94,7 +94,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                             <span>{position.position_z}</span>
                         </div>
                         <div>
-                            <label htmlFor="discharge_slider">значение заряда (*1e-19):</label>
+                            <label htmlFor="discharge_slider">значение заряда (*1e-14):</label>
                             <input type="range" id="discharge_slider" min="-4" max="4" name={"discharge"} step={0.1}
                                    value={position.discharge} onChange={updatePosition}/>
                             <span>{position.discharge}</span>
@@ -108,19 +108,19 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                     <h2>Начальная скорость частицы:</h2>
                     <div className="sub-form-container">
                         <div>
-                            <label htmlFor="velocity_x_slider">по X (*1e6):</label>
+                            <label htmlFor="velocity_x_slider">по X (*1e1):</label>
                             <input type="range" id="velocity_x_slider" min="-5" max="5" name={"velocity_x"} step={0.1}
                                    value={velocity.velocity_x} onChange={updateVelocity}/>
                             <span>{velocity.velocity_x}</span>
                         </div>
                         <div>
-                            <label htmlFor="velocity_y_slider">по Y (*1e6):</label>
+                            <label htmlFor="velocity_y_slider">по Y (*1e1):</label>
                             <input type="range" id="velocity_y_slider" min="-5" max="5" name={"velocity_y"} step={0.1}
                                    value={velocity.velocity_y} onChange={updateVelocity}/>
                             <span>{velocity.velocity_y}</span>
                         </div>
                         <div>
-                            <label htmlFor="velocity_z_slider">по Z (*1e6):</label>
+                            <label htmlFor="velocity_z_slider">по Z (*1e1):</label>
                             <input type="range" id="velocity_z_slider" min="-5" max="5" name={"velocity_z"} step={0.1}
                                    value={velocity.velocity_z} onChange={updateVelocity}/>
                             <span>{velocity.velocity_z}</span>
@@ -132,19 +132,19 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                     <h2>Вектор магнитной индукции:</h2>
                     <div className="sub-form-container">
                         <div>
-                            <label htmlFor="induction_x_slider">по X (*1e-3):</label>
+                            <label htmlFor="induction_x_slider">по X (*1e-1):</label>
                             <input type="range" id="induction_x_slider" min="-5" max="5" name={"induction_x"} step={0.1}
                                    value={induction.induction_x} onChange={updateInduction}/>
                             <span>{induction.induction_x}</span>
                         </div>
                         <div>
-                            <label htmlFor="induction_y_slider">по Y (*1e-3):</label>
+                            <label htmlFor="induction_y_slider">по Y (*1e-1):</label>
                             <input type="range" id="induction_y_slider" min="-5" max="5" name={"induction_y"} step={0.1}
                                    value={induction.induction_y} onChange={updateInduction}/>
                             <span>{induction.induction_y}</span>
                         </div>
                         <div>
-                            <label htmlFor="induction_z_slider">по Z (*1e-3):</label>
+                            <label htmlFor="induction_z_slider">по Z (*1e-1):</label>
                             <input type="range" id="induction_z_slider" min="-5" max="5" name={"induction_z"} step={0.1}
                                    value={induction.induction_z} onChange={updateInduction}/>
                             <span>{induction.induction_z}</span>
@@ -154,7 +154,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                 </div>
 
                 <div className="time">
-                    <h2>Время движения (*1e-6, с):</h2>
+                    <h2>Время движения (*1e-1, с):</h2>
                     <input type="range" id="time_slider" min="0.5" max="7" name={"fallenTime"} step={0.1}
                            value={fallenTime} onChange={updateTime}/>
                     <span>{fallenTime}</span>
