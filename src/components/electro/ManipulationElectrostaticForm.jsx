@@ -16,7 +16,7 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
     const [particles, setParticles] = useState(initialParticles);
     const [tension, setTension] = useState({ tension_x: 1, tension_y: 1, tension_z: 1 });
     const [gravity, setGravity] = useState(false);
-    const [fallenTime, setFallenTime] = useState(2);
+    // const [fallenTime, setFallenTime] = useState(2);
 
     const updateParticleField = (index, field, value) => {
         const updatedParticles = particles.map((particle, i) => {
@@ -41,9 +41,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
         setGravity(event.target.value === "yes");
     };
 
-    const updateTime = (e) => {
-        setFallenTime(e.target.value);
-    };
+    // const updateTime = (e) => {
+    //     setFallenTime(e.target.value);
+    // };
 
     const updateCanvas = (e) => {
         e.preventDefault();
@@ -64,7 +64,8 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
         // particles = [{pos_x: ..., pos_y: ..., pos_z: ..., vel_x: ..., vel_y: ..., vel_z: ..., discharge: ...}, {...}, {...}], пока сделай максимум для передачи 3 частицы
         // пределы для слайдеров оставь те же
         // DrawElectrostatic(position, velocity, tension, gravity, fallenTime, scene, camera, renderer, dispatch);
-        DrawElectrostatic(particles, tension, gravity, fallenTime, scene, camera, renderer, dispatch);
+        // DrawElectrostatic(particles, tension, gravity, fallenTime, scene, camera, renderer, dispatch);
+        DrawElectrostatic(particles, tension, gravity, 5, scene, camera, renderer, dispatch);
     };
 
     return (
@@ -225,13 +226,13 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                         </div>
                     </div>
 
-                    <div className="time">
-                        <h2>Время движения (с):</h2>
-                        <input type="range" id="time_slider" min="0.5" max="5" name={"fallenTime"} step={0.1}
-                               value={fallenTime} onChange={updateTime}/>
-                        <span>{fallenTime}</span>
+                    {/*<div className="time">*/}
+                    {/*    <h2>Время движения (с):</h2>*/}
+                    {/*    <input type="range" id="time_slider" min="0.5" max="5" name={"fallenTime"} step={0.1}*/}
+                    {/*           value={fallenTime} onChange={updateTime}/>*/}
+                    {/*    <span>{fallenTime}</span>*/}
 
-                    </div>
+                    {/*</div>*/}
 
                     <div className="gravity">
                         <h2>Использовать силу тяжести?</h2>

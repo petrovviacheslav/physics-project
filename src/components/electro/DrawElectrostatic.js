@@ -16,12 +16,9 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
 
     const useGravity = Boolean(gravity);
     dispatch(setGravity(useGravity));
-    // const q = Number(position_arr.discharge) * powTenQ; // заряд частицы, Кл
-    const q = Number(particles_arr[0].discharge) * powTenQ; // заряд частицы, Кл
+    const q = Number(particles_arr[0].discharge) * powTenQ;// заряд частицы, Кл
     const m = 9.1*powTenM; // масса частицы, кг
     const E = new THREE.Vector3(Number(tension_arr.tension_x) * powTenE, Number(tension_arr.tension_y) * powTenE, Number(tension_arr.tension_z) * powTenE); // магнитное поле, Тл
-    // const v0 = new THREE.Vector3(Number(velocity_arr.velocity_x), Number(velocity_arr.velocity_y), Number(velocity_arr.velocity_z)); // начальная скорость, м/с
-    // const r0 = new THREE.Vector3(Number(position_arr.position_x), Number(position_arr.position_y), Number(position_arr.position_z)); // начальная позиция, м
     const v0 = new THREE.Vector3(Number(particles_arr[0].velocity_x), Number(particles_arr[0].velocity_y), Number(particles_arr[0].velocity_z)); // начальная скорость, м/с
     const r0 = new THREE.Vector3(Number(particles_arr[0].position_x), Number(particles_arr[0].position_y), Number(particles_arr[0].position_z)); // начальная позиция, м
 
