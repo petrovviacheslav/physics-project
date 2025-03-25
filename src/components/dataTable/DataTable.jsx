@@ -13,10 +13,25 @@ const DataTable = ({ scene, camera, renderer, divideVelocity }) => {
     const positionsFromStore = useSelector((state) => state.data.positions);
     const velocitiesFromStore = useSelector((state) => state.data.velocities);
 
-    const [selectedTime, setSelectedTime] = useState(2);
+    const [selectedTime, setSelectedTime] = useState(0);
     const [currentPoint, setCurrentPoint] = useState(null);
     const [currentVelocity, setCurrentVelocity] = useState(null);
     const [selectedData, setSelectedData] = useState(null);
+
+    // Определяем динамический maxTime по последнему значению time в positionsFromStore
+    const maxTime =
+        positionsFromStore && positionsFromStore.length > 0
+            ? positionsFromStore[positionsFromStore.length - 1].time
+            : 5;
+
+    // Если выбранное время превышает maxTime (например, при обновлении данных) – корректируем его
+    useEffect(() => {
+        if (selectedTime > maxTime) {
+            setSelectedTime(maxTime);
+            updateForSelectedTime(maxTime);
+        }
+    }, [maxTime]);
+
 
     const updateForSelectedTime = (timeValue) => {
         // если данных нет, ничего не делаем
@@ -33,6 +48,8 @@ const DataTable = ({ scene, camera, renderer, divideVelocity }) => {
         // определяем индекс найденной записи (предполагается, что позиции и скорости синхронизированы)
         const index = positionsFromStore.findIndex((pos) => pos.id === closest.id);
         if (index < 0) return;
+
+        console.log(positionsFromStore.length);
 
         // Обновляем данные для таблицы
         setSelectedData({
@@ -91,18 +108,17 @@ const DataTable = ({ scene, camera, renderer, divideVelocity }) => {
                     type="range"
                     id="time_slider"
                     min="0"
-                    max="5"
-                    step="0.025"
+                    max={maxTime}
+                    step={maxTime/200} /* динамический шаг */
                     value={selectedTime}
                     onChange={updateTime}
                 />
-                <span>{selectedTime}</span>
+                <span>{selectedTime.toFixed(2)}</span>
             </div>
             <div className="table-container">
                 <table className="data_table">
                     <thead>
                     <tr>
-                        {/*<th>№</th>*/}
                         <th>X</th>
                         <th>Y</th>
                         <th>Z</th>
@@ -115,7 +131,6 @@ const DataTable = ({ scene, camera, renderer, divideVelocity }) => {
                     <tbody>
                     {selectedData ? (
                         <tr key={selectedData.id}>
-                            {/*<td>{selectedData.id}</td>*/}
                             <td>{selectedData.x}</td>
                             <td>{selectedData.y}</td>
                             <td>{selectedData.z}</td>
@@ -126,7 +141,7 @@ const DataTable = ({ scene, camera, renderer, divideVelocity }) => {
                         </tr>
                     ) : (
                         <tr>
-                            <td colSpan="8">Нет данных</td>
+                            <td colSpan="7">Нет данных</td>
                         </tr>
                     )}
                     </tbody>

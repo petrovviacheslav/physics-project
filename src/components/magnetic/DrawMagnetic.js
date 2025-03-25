@@ -3,7 +3,7 @@ import {addBaseXYZ, addPlane, addPoint, addTrajectory, addVector} from "../../ut
 import {animate} from "../../util/animate";
 import {addPositionAndVelocity} from "../../util/addsToStore";
 
-export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTime, addConstructionsFlag, scene, camera, renderer, dispatch) {
+export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstructionsFlag, scene, camera, renderer, dispatch) {
     console.log('===================');
     console.log('DrawMagnetic');
     // Константы и данные
@@ -13,11 +13,11 @@ export function DrawMagnetic(position_arr, velocity_arr, induction_arr, fallenTi
     const powTenTime = 1e-1;
     const powTenM = 1e-16;
 
-    const q = Number(position_arr.discharge) * powTenQ; // заряд частицы, Кл
+    const q = Number(particles_arr[0].discharge) * powTenQ; // заряд частицы, Кл
     const m = 1.1 * powTenM; // масса частицы, кг
     const B = new THREE.Vector3(powTenB * Number(induction_arr.induction_x), powTenB * Number(induction_arr.induction_y), powTenB * Number(induction_arr.induction_z)); // магнитное поле, Тл
-    const v0 = new THREE.Vector3(powTenV0 * Number(velocity_arr.velocity_x), powTenV0 * Number(velocity_arr.velocity_y), powTenV0 * Number(velocity_arr.velocity_z)); // начальная скорость, м/с
-    const r0 = new THREE.Vector3(Number(position_arr.position_x), Number(position_arr.position_y), Number(position_arr.position_z)); // начальная позиция, м
+    const v0 = new THREE.Vector3(powTenV0 * Number(particles_arr[0].velocity_x), powTenV0 * Number(particles_arr[0].velocity_y), powTenV0 * Number(particles_arr[0].velocity_z)); // начальная скорость, м/с
+    const r0 = new THREE.Vector3(Number(particles_arr[0].position_x), Number(particles_arr[0].position_y), Number(particles_arr[0].position_z)); // начальная позиция, м
     const allTime = Number(fallenTime) * powTenTime;
 
     //=============

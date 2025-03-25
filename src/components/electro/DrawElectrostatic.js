@@ -73,7 +73,7 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
     let newPosition = new THREE.Vector3();
     let newVelocity = new THREE.Vector3();
     while (i < parts) {
-        [ newPosition, newVelocity ] = iterationCounting()
+        [ newPosition, newVelocity ] = iterationCounting();
 
         if (i >= parts * (fallTime / allTime)) {
             newPosition.z = 0;

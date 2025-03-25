@@ -231,7 +231,6 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                     {/*    <input type="range" id="time_slider" min="0.5" max="5" name={"fallenTime"} step={0.1}*/}
                     {/*           value={fallenTime} onChange={updateTime}/>*/}
                     {/*    <span>{fallenTime}</span>*/}
-
                     {/*</div>*/}
 
                     <div className="gravity">
