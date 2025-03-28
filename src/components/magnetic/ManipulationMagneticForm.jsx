@@ -8,13 +8,41 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
     const dispatch = useDispatch();
 
     const initialParticles = [
-        { position_x: 0, position_y: 0.5, position_z: 0.1, velocity_x: 1, velocity_y: 0, velocity_z: 1.2, discharge: 1 },
-        { position_x: 0, position_y: 0.5, position_z: 0.1, velocity_x: 1, velocity_y: 0, velocity_z: 1.2, discharge: 1 },
-        { position_x: 0, position_y: 0.5, position_z: 0.1, velocity_x: 1, velocity_y: 0, velocity_z: 1.2, discharge: 1 },
+        {
+            position_x: 0,
+            position_y: 0.5,
+            position_z: 0.1,
+            velocity_x: 1,
+            velocity_y: 0,
+            velocity_z: 1.2,
+            discharge: 1,
+        },
+        {
+            position_x: 0,
+            position_y: 0.5,
+            position_z: 0.1,
+            velocity_x: 1,
+            velocity_y: 0,
+            velocity_z: 1.2,
+            discharge: 1,
+        },
+        {
+            position_x: 0,
+            position_y: 0.5,
+            position_z: 0.1,
+            velocity_x: 1,
+            velocity_y: 0,
+            velocity_z: 1.2,
+            discharge: 1,
+        },
     ];
     const [particles, setParticles] = useState(initialParticles);
-    const [induction, setInduction] = useState({ induction_x: 0, induction_y: 0, induction_z: 2 });
-    const [fallenTime, setFallenTime] = useState(5);
+    const [induction, setInduction] = useState({
+        induction_x: 0,
+        induction_y: 0,
+        induction_z: 2
+    });
+    // const [fallenTime, setFallenTime] = useState(5);
     const [addConstructions, setAddConstructions] = useState(true);
 
     const updateParticleField = (index, field, value) => {
@@ -52,19 +80,20 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
         }
 
         // Передаём массив частиц, а также induction, fallenTime и addConstructions как и прежде.
-        DrawMagnetic(particles, induction, fallenTime, addConstructions, scene, camera, renderer, dispatch);
+        DrawMagnetic(particles, induction, 5, addConstructions, scene, camera, renderer, dispatch);
     };
 
     return (
         <div className="manipulation-magnetic-form">
             <form onSubmit={(e) => e.preventDefault()}>
+                {/* Таблица с параметрами частиц */}
                 <table>
                     <thead>
                     <tr>
-                        <th>Параметр</th>
-                        <th>Частица 1</th>
-                        <th>Частица 2</th>
-                        <th>Частица 3</th>
+                        <th className="first-cell">Параметр</th>
+                        <th className="first-cell">Частица 1</th>
+                        <th className="first-cell">Частица 2</th>
+                        <th className="first-cell">Частица 3</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -79,7 +108,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="position_x"
                                     value={particle.position_x}
-                                    onChange={(e) => updateParticleField(index, "position_x", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "position_x", e.target.value)
+                                    }
                                 />
                                 <span>{particle.position_x}</span>
                             </td>
@@ -96,7 +127,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="position_y"
                                     value={particle.position_y}
-                                    onChange={(e) => updateParticleField(index, "position_y", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "position_y", e.target.value)
+                                    }
                                 />
                                 <span>{particle.position_y}</span>
                             </td>
@@ -113,7 +146,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="position_z"
                                     value={particle.position_z}
-                                    onChange={(e) => updateParticleField(index, "position_z", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "position_z", e.target.value)
+                                    }
                                 />
                                 <span>{particle.position_z}</span>
                             </td>
@@ -130,7 +165,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="discharge"
                                     value={particle.discharge}
-                                    onChange={(e) => updateParticleField(index, "discharge", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "discharge", e.target.value)
+                                    }
                                 />
                                 <span>{particle.discharge}</span>
                             </td>
@@ -147,7 +184,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="velocity_x"
                                     value={particle.velocity_x}
-                                    onChange={(e) => updateParticleField(index, "velocity_x", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "velocity_x", e.target.value)
+                                    }
                                 />
                                 <span>{particle.velocity_x}</span>
                             </td>
@@ -164,7 +203,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="velocity_y"
                                     value={particle.velocity_y}
-                                    onChange={(e) => updateParticleField(index, "velocity_y", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "velocity_y", e.target.value)
+                                    }
                                 />
                                 <span>{particle.velocity_y}</span>
                             </td>
@@ -181,7 +222,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                     step="0.1"
                                     name="velocity_z"
                                     value={particle.velocity_z}
-                                    onChange={(e) => updateParticleField(index, "velocity_z", e.target.value)}
+                                    onChange={(e) =>
+                                        updateParticleField(index, "velocity_z", e.target.value)
+                                    }
                                 />
                                 <span>{particle.velocity_z}</span>
                             </td>
@@ -190,11 +233,21 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                     </tbody>
                 </table>
 
-                <div className="induction">
-                    <h2>Вектор магнитной индукции:</h2>
-                    <div className="sub-form-container">
-                        <div>
-                            <label htmlFor="induction_x_slider">по X (*1e-1):</label>
+                {/* Отдельная таблица для магнитной индукции */}
+                <h2>Вектор магнитной индукции:</h2>
+                <table className="vector-table">
+                    <thead>
+                    <tr>
+                        <th className="first-cell">Координата</th>
+                        <th className="first-cell">По X (*1e-1)</th>
+                        <th className="first-cell">По Y (*1e-1)</th>
+                        <th className="first-cell">По Z (*1e-1)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td className="first-cell">Индукция</td>
+                        <td>
                             <input
                                 type="range"
                                 id="induction_x_slider"
@@ -206,9 +259,8 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                 onChange={updateInduction}
                             />
                             <span>{induction.induction_x}</span>
-                        </div>
-                        <div>
-                            <label htmlFor="induction_y_slider">по Y (*1e-1):</label>
+                        </td>
+                        <td>
                             <input
                                 type="range"
                                 id="induction_y_slider"
@@ -220,9 +272,8 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                 onChange={updateInduction}
                             />
                             <span>{induction.induction_y}</span>
-                        </div>
-                        <div>
-                            <label htmlFor="induction_z_slider">по Z (*1e-1):</label>
+                        </td>
+                        <td>
                             <input
                                 type="range"
                                 id="induction_z_slider"
@@ -234,9 +285,10 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                                 onChange={updateInduction}
                             />
                             <span>{induction.induction_z}</span>
-                        </div>
-                    </div>
-                </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
 
                 <div className="addConstructions">
                     <h2>Добавить промежуточные построения?</h2>
@@ -261,8 +313,12 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                 </div>
 
                 <div className="buttons">
-                    <button type="submit" onClick={updateCanvas}>Create</button>
-                    <button onClick={e => clearCanvas(e, dispatch, scene, renderer, camera)}>Clear</button>
+                    <button type="submit" onClick={updateCanvas}>
+                        Create
+                    </button>
+                    <button onClick={(e) => clearCanvas(e, dispatch, scene, renderer, camera)}>
+                        Clear
+                    </button>
                 </div>
             </form>
         </div>

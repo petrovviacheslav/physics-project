@@ -74,10 +74,10 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                 <table>
                     <thead>
                     <tr>
-                        <th>Параметр</th>
-                        <th>Частица 1</th>
-                        <th>Частица 2</th>
-                        <th>Частица 3</th>
+                        <th className="first-cell">Параметр</th>
+                        <th className="first-cell">Частица 1</th>
+                        <th className="first-cell">Частица 2</th>
+                        <th className="first-cell">Частица 3</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -203,35 +203,68 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                     </tbody>
                 </table>
 
-                <div className="tension">
-                    <h2>Вектор напряжённости поля:</h2>
-                    <div className="sub-form-container">
-                        <div>
-                            <label htmlFor="tension_x_slider">по X (*1e3):</label>
+                <h2>Вектор напряжённости поля:</h2>
+                <table className="vector-table">
+                    <thead>
+                    <tr>
+                        <th className="first-cell">Координата</th>
+                        <th className="first-cell">По X (*1e3)</th>
+                        <th className="first-cell">По Y (*1e3)</th>
+                        <th className="first-cell">По Z (*1e3)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td className="first-cell">Напряжённость</td>
+                        <td className="first-cell">
                             <input type="range" id="tension_x_slider" min="-5" max="5" name={"tension_x"} step={0.1}
                                    value={tension.tension_x} onChange={updateTension}/>
                             <span>{tension.tension_x}</span>
-                        </div>
-                        <div>
+                        </td>
+                        <td className="first-cell">
                             <label htmlFor="tension_y_slider">по Y (*1e3):</label>
                             <input type="range" id="tension_y_slider" min="-5" max="5" name={"tension_y"} step={0.1}
                                    value={tension.tension_y} onChange={updateTension}/>
                             <span>{tension.tension_y}</span>
-                        </div>
-                        <div>
+                        </td>
+                        <td className="first-cell">
                             <label htmlFor="tension_z_slider">по Z (*1e3):</label>
                             <input type="range" id="tension_z_slider" min="-5" max="5" name={"tension_z"} step={0.1}
                                    value={tension.tension_z} onChange={updateTension}/>
                             <span>{tension.tension_z}</span>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div className="tension">
 
-                    {/*<div className="time">*/}
-                    {/*    <h2>Время движения (с):</h2>*/}
-                    {/*    <input type="range" id="time_slider" min="0.5" max="5" name={"fallenTime"} step={0.1}*/}
-                    {/*           value={fallenTime} onChange={updateTime}/>*/}
-                    {/*    <span>{fallenTime}</span>*/}
+                    {/*<div className="sub-form-container">*/}
+                    {/*    <div>*/}
+                    {/*        <label htmlFor="tension_x_slider">по X (*1e3):</label>*/}
+                    {/*        <input type="range" id="tension_x_slider" min="-5" max="5" name={"tension_x"} step={0.1}*/}
+                    {/*               value={tension.tension_x} onChange={updateTension}/>*/}
+                    {/*        <span>{tension.tension_x}</span>*/}
+                    {/*    </div>*/}
+                    {/*    <div>*/}
+                    {/*        <label htmlFor="tension_y_slider">по Y (*1e3):</label>*/}
+                    {/*        <input type="range" id="tension_y_slider" min="-5" max="5" name={"tension_y"} step={0.1}*/}
+                    {/*               value={tension.tension_y} onChange={updateTension}/>*/}
+                    {/*        <span>{tension.tension_y}</span>*/}
+                    {/*    </div>*/}
+                    {/*    <div>*/}
+                    {/*        <label htmlFor="tension_z_slider">по Z (*1e3):</label>*/}
+                    {/*        <input type="range" id="tension_z_slider" min="-5" max="5" name={"tension_z"} step={0.1}*/}
+                    {/*               value={tension.tension_z} onChange={updateTension}/>*/}
+                    {/*        <span>{tension.tension_z}</span>*/}
+                    {/*    </div>*/}
                     {/*</div>*/}
+
+                    {/*/!*<div className="time">*!/*/}
+                    {/*/!*    <h2>Время движения (с):</h2>*!/*/}
+                    {/*/!*    <input type="range" id="time_slider" min="0.5" max="5" name={"fallenTime"} step={0.1}*!/*/}
+                    {/*/!*           value={fallenTime} onChange={updateTime}/>*!/*/}
+                    {/*/!*    <span>{fallenTime}</span>*!/*/}
+                    {/*/!*</div>*!/*/}
 
                     <div className="gravity">
                         <h2>Использовать силу тяжести?</h2>
