@@ -9,9 +9,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
     const dispatch = useDispatch();
 
     const initialParticles = [
-        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1 },
-        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1 },
-        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1 },
+        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1, need: false },
+        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1, need: true },
+        { position_x: 0, position_y: 0, position_z: 1, velocity_x: 1, velocity_y: 1, velocity_z: 1, discharge: 1, need: false },
     ];
     const [particles, setParticles] = useState(initialParticles);
     const [tension, setTension] = useState({ tension_x: 1, tension_y: 1, tension_z: 1 });
@@ -21,12 +21,24 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
     const updateParticleField = (index, field, value) => {
         const updatedParticles = particles.map((particle, i) => {
             if (i === index) {
+                if (field === "need") {
+                    return { ...particle, [field]: value };
+                }
                 return { ...particle, [field]: parseFloat(value) };
             }
             return particle;
         });
         setParticles(updatedParticles);
     };
+
+    const checkUseParticles = () => {
+        let useParticles = 0;
+        particles.map((particle) => {
+            if (particle.need) useParticles += 1;
+        });
+        return useParticles > 1;
+    };
+
 
     const updateTension = (e) => {
         const {name, value} = e.target;
@@ -75,12 +87,37 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                     <thead>
                     <tr>
                         <th className="first-cell">Параметр</th>
-                        <th className="first-cell">Частица 1</th>
-                        <th className="first-cell">Частица 2</th>
-                        <th className="first-cell">Частица 3</th>
+                        <th className="first-cell">Частица 1 (red)</th>
+                        <th className="first-cell">Частица 2 (green)</th>
+                        <th className="first-cell">Частица 3 (blue)</th>
                     </tr>
                     </thead>
                     <tbody>
+                    <tr>
+                        <td>Добавить эту частицу?</td>
+                        {particles.map((particle, index) => (
+                            <td key={`need-${index}`}>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        value="yes"
+                                        checked={particle.need}
+                                        onChange={(e) => updateParticleField(index, "need", !particle.need)}
+                                    />
+                                    <span>Да</span>
+                                </label>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        value="no"
+                                        checked={!particle.need}
+                                        onChange={(e) => checkUseParticles() && updateParticleField(index, "need", !particle.need)}
+                                    />
+                                    <span>Нет</span>
+                                </label>
+                            </td>
+                        ))}
+                    </tr>
                     <tr>
                         <td>Координата X</td>
                         {particles.map((particle, index) => (
@@ -91,8 +128,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="1"
                                     step="0.1"
                                     name="position_x"
+                                    disabled={!particle.need}
                                     value={particle.position_x}
-                                    onChange={(e) => updateParticleField(index, "position_x", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "position_x", e.target.value)}
                                 />
                                 <span>{particle.position_x}</span>
                             </td>
@@ -108,8 +146,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="1"
                                     step="0.1"
                                     name="position_y"
+                                    disabled={!particle.need}
                                     value={particle.position_y}
-                                    onChange={(e) => updateParticleField(index, "position_y", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "position_y", e.target.value)}
                                 />
                                 <span>{particle.position_y}</span>
                             </td>
@@ -125,8 +164,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="1"
                                     step="0.1"
                                     name="position_z"
+                                    disabled={!particle.need}
                                     value={particle.position_z}
-                                    onChange={(e) => updateParticleField(index, "position_z", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "position_z", e.target.value)}
                                 />
                                 <span>{particle.position_z}</span>
                             </td>
@@ -142,8 +182,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="20"
                                     step="0.1"
                                     name="discharge"
+                                    disabled={!particle.need}
                                     value={particle.discharge}
-                                    onChange={(e) => updateParticleField(index, "discharge", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "discharge", e.target.value)}
                                 />
                                 <span>{particle.discharge}</span>
                             </td>
@@ -159,8 +200,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="5"
                                     step="0.1"
                                     name="velocity_x"
+                                    disabled={!particle.need}
                                     value={particle.velocity_x}
-                                    onChange={(e) => updateParticleField(index, "velocity_x", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "velocity_x", e.target.value)}
                                 />
                                 <span>{particle.velocity_x}</span>
                             </td>
@@ -176,8 +218,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="5"
                                     step="0.1"
                                     name="velocity_y"
+                                    disabled={!particle.need}
                                     value={particle.velocity_y}
-                                    onChange={(e) => updateParticleField(index, "velocity_y", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "velocity_y", e.target.value)}
                                 />
                                 <span>{particle.velocity_y}</span>
                             </td>
@@ -193,8 +236,9 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                                     max="5"
                                     step="0.1"
                                     name="velocity_z"
+                                    disabled={!particle.need}
                                     value={particle.velocity_z}
-                                    onChange={(e) => updateParticleField(index, "velocity_z", e.target.value)}
+                                    onChange={(e) => particle.need && updateParticleField(index, "velocity_z", e.target.value)}
                                 />
                                 <span>{particle.velocity_z}</span>
                             </td>
