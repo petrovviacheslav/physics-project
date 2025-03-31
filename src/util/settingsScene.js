@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {animate} from "./animate";
 import {addBaseXYZ} from "./addsToScene";
 
+// создание сцены с базовыми настройками
 export function default_scene(scene, renderer, camera){
     scene.rotation.x = -Math.PI / 2;
     scene.rotation.z = -Math.PI / 2;

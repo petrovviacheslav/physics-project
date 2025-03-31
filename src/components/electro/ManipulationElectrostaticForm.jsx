@@ -1,6 +1,5 @@
 import {useState} from "react";
 import DrawElectrostatic from "./DrawElectrostatic";
-import {clearPositions, clearVelocity} from "../../store/dataSlice";
 import {useDispatch} from "react-redux";
 import {clearCanvas} from "../../util/addsToScene";
 
@@ -43,8 +42,8 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
     const [particles, setParticles] = useState(initialParticles);
     const [tension, setTension] = useState({tension_x: 1, tension_y: 1, tension_z: 1});
     const [gravity, setGravity] = useState(false);
-    // const [fallenTime, setFallenTime] = useState(2);
 
+    // обновление данных о частицах
     const updateParticleField = (index, field, value) => {
         const updatedParticles = particles.map((particle, i) => {
             if (i === index) {
@@ -58,6 +57,7 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
         setParticles(updatedParticles);
     };
 
+    // проверка, что сейчас выбрано минимум 2 частицы, чтобы не дать возможность пользователю отказаться от всех частиц
     const checkUseParticles = () => {
         let useParticles = 0;
         particles.map((particle) => {
@@ -66,7 +66,7 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
         return useParticles > 1;
     };
 
-
+    // обновление данных о напряжённости
     const updateTension = (e) => {
         const {name, value} = e.target;
         setTension(prevData => ({
@@ -76,26 +76,16 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
 
     };
 
+    // добавить/убрать использование гравитации
     const handleOptionChange = (event) => {
         setGravity(event.target.value === "yes");
     };
 
-    // const updateTime = (e) => {
-    //     setFallenTime(e.target.value);
-    // };
-
+    // обновляем сцену, отрисовывая новые траектории по параметрам
     const updateCanvas = (e) => {
-        e.preventDefault();
-        dispatch(clearPositions());
-        dispatch(clearVelocity());
+        clearCanvas(e, dispatch, scene, renderer, camera, true);
 
-        while (scene.children.length !== 0) {
-            scene.children.forEach((child) => {
-                scene.remove(child);
-            });
-        }
-
-        DrawElectrostatic(particles, tension, gravity, 3, scene, camera, renderer, dispatch);
+        DrawElectrostatic(particles, tension, gravity, 1, scene, camera, renderer, dispatch);
     };
 
     return (
@@ -277,18 +267,18 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
                     </thead>
                     <tbody>
                     <tr>
-                        <td className="first-cell">Напряжённость</td>
-                        <td className="first-cell">
+                        <td>Напряжённость</td>
+                        <td>
                             <input type="range" id="tension_x_slider" min="-5" max="5" name={"tension_x"} step={0.1}
                                    value={tension.tension_x} onChange={updateTension}/>
                             <span>{tension.tension_x}</span>
                         </td>
-                        <td className="first-cell">
+                        <td>
                             <input type="range" id="tension_y_slider" min="-5" max="5" name={"tension_y"} step={0.1}
                                    value={tension.tension_y} onChange={updateTension}/>
                             <span>{tension.tension_y}</span>
                         </td>
-                        <td className="first-cell">
+                        <td>
                             <input type="range" id="tension_z_slider" min="-5" max="5" name={"tension_z"} step={0.1}
                                    value={tension.tension_z} onChange={updateTension}/>
                             <span>{tension.tension_z}</span>
@@ -322,7 +312,7 @@ const ManipulationElectrostaticForm = ({scene, camera, renderer}) => {
 
                     <div className={"buttons"}>
                         <button type="submit" onClick={updateCanvas}>Create</button>
-                        <button onClick={e => clearCanvas(e, dispatch, scene, renderer, camera)}>Clear</button>
+                        <button onClick={e => clearCanvas(e, dispatch, scene, renderer, camera, false)}>Clear</button>
                     </div>
                 </div>
             </form>

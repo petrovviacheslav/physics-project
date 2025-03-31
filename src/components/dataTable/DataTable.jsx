@@ -21,7 +21,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     const maxTime =
         positionsFromStore && positionsFromStore.length > 0
             ? positionsFromStore[positionsFromStore.length - 1].time
-            : 3;
+            : 1;
 
     // Если выбранное время превышает maxTime (например, при обновлении данных) – корректируем его
     useEffect(() => {
@@ -44,9 +44,11 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                 : prev;
         });
 
+        // closest - первая из n записей о данном времени, у них будет различаться параметр num
         // находим все частицы (предполагается, что позиции и скорости синхронизированы)
         const arr_positions = positionsFromStore.filter((pos) => pos.id === closest.id);
         const arr_vels = velocitiesFromStore.filter((vel) => vel.id === closest.id);
+        // количество частиц на сцене
         const n = arr_positions.length;
 
         // Обновляем данные для таблицы
@@ -59,10 +61,11 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
             n: n
         });
 
+        // через этот принт потом будем дебажить ошибки
         console.debug(selectedData);
 
         // обновляем сцену:
-        // 1. Удаляем предыдущие объекты
+        // 1. Удаляем предыдущие объекты (на всякий раз проходимся несколько раз)
         for (let j = 0; j < 3; j++) {
             for (let i = 0; i < n; i++) {
                 if (currentPoint[i]) scene.remove(currentPoint[i]);
@@ -107,21 +110,21 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     }, [positionsFromStore, selectedTime, velocitiesFromStore]);
 
 
-    function MyList({items}) {
+    // отрисовка таблицы с координатами и скоростями всех частиц
+    function MyTbody({data}) {
         const renderedItems = [];
 
-        // Обычный цикл for
-        for (let i = 0; i < items.n; i++) {
+        for (let i = 0; i < data.n; i++) {
             renderedItems.push(
-                <tr key={items.id + "_" + i}>
+                <tr key={data.id + "_" + i}>
                     <td>{i}</td>
-                    <td>{items.arr_positions[i].x}</td>
-                    <td>{items.arr_positions[i].y}</td>
-                    <td>{items.arr_positions[i].z}</td>
-                    <td>{items.arr_vels[i].x}</td>
-                    <td>{items.arr_vels[i].y}</td>
-                    <td>{items.arr_vels[i].z}</td>
-                    <td>{items.time}</td>
+                    <td>{data.arr_positions[i].x}</td>
+                    <td>{data.arr_positions[i].y}</td>
+                    <td>{data.arr_positions[i].z}</td>
+                    <td>{data.arr_vels[i].x}</td>
+                    <td>{data.arr_vels[i].y}</td>
+                    <td>{data.arr_vels[i].z}</td>
+                    <td>{data.time}</td>
                 </tr>
             );
         }
@@ -158,7 +161,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                         <th>time</th>
                     </tr>
                     </thead>
-                    <MyList items={selectedData}/>
+                    <MyTbody data={selectedData}/>
                 </table>
             </div>
         </div>

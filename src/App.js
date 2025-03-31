@@ -30,7 +30,7 @@ function App() {
             <Routes>
                 <Route path="/magnetic" element={createPage(<Magnetic/>)}/>
                 <Route path="/electro" element={createPage(<Electro/>)}/>
-                <Route path="/electro-magnetic" element={createPage(<div>lol</div>)}/>
+                {/*<Route path="/electro-magnetic" element={createPage(<div>lol</div>)}/>*/}
             </Routes>
         </Router>
 

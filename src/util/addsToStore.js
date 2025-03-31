@@ -1,5 +1,7 @@
 import {addPosition, addVelocity} from "../store/dataSlice";
 
+
+// добавление новой позиции и скорости для определённой точки в хранилище
 export function addPositionAndVelocity(index, position, velocity, time, time_fixed, dispatch, num_particle) {
     dispatch(addPosition({
         id: index,

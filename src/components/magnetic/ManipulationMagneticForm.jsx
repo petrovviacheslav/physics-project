@@ -1,7 +1,6 @@
 import {useState} from "react";
 import {DrawMagnetic} from "./DrawMagnetic";
 import {useDispatch} from "react-redux";
-import {clearPositions, clearVelocity} from "../../store/dataSlice";
 import {clearCanvas} from "../../util/addsToScene";
 
 const ManipulationMagneticForm = ({scene, camera, renderer}) => {
@@ -48,6 +47,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
 
     const [addConstructions, setAddConstructions] = useState(true);
 
+    // обновление данных о частицах
     const updateParticleField = (index, field, value) => {
         const updatedParticles = particles.map((particle, i) => {
             if (i === index) {
@@ -61,6 +61,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
         setParticles(updatedParticles);
     };
 
+    // проверка, что сейчас выбрано минимум 2 частицы, чтобы не дать возможность пользователю отказаться от всех частиц
     const checkUseParticles = () => {
         let useParticles = 0;
         particles.map((particle) => {
@@ -69,6 +70,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
         return useParticles > 1;
     };
 
+    // обновление данных о векторе магнитной индукции
     const updateInduction = (e) => {
         const {name, value} = e.target;
         setInduction(prevData => ({
@@ -77,23 +79,16 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
         }));
     };
 
+    // обновление информации о том, нужны ли дополнительные построения (убрать??)
     const handleConstructionsChange = (event) => {
         setAddConstructions(event.target.value === "yes");
     };
 
+    // обновляем сцену, отрисовывая новые траектории по параметрам
     const updateCanvas = (e) => {
-        e.preventDefault();
+        clearCanvas(e, dispatch, scene, renderer, camera, true);
 
-        dispatch(clearPositions());
-        dispatch(clearVelocity());
-
-        while (scene.children.length !== 0) {
-            scene.children.forEach((child) => {
-                scene.remove(child);
-            });
-        }
-
-        DrawMagnetic(particles, induction, 3, addConstructions, scene, camera, renderer, dispatch);
+        DrawMagnetic(particles, induction, 1, addConstructions, scene, camera, renderer, dispatch);
     };
 
     return (
@@ -291,7 +286,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                     </thead>
                     <tbody>
                     <tr>
-                        <td className="first-cell">Индукция</td>
+                        <td>Индукция</td>
                         <td>
                             <input
                                 type="range"
@@ -361,7 +356,7 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                     <button type="submit" onClick={updateCanvas}>
                         Create
                     </button>
-                    <button onClick={(e) => clearCanvas(e, dispatch, scene, renderer, camera)}>
+                    <button onClick={(e) => clearCanvas(e, dispatch, scene, renderer, camera, false)}>
                         Clear
                     </button>
                 </div>

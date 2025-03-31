@@ -25,6 +25,7 @@ export function addPlane(A, B, C, D, size, color, scene) {
     scene.add(plane);
 }
 
+// добавление траектории на сцену по массиву последовательных точек
 export function addTrajectory(positions, color, scene) {
     const material = new THREE.LineBasicMaterial({color: color});//0xff0000
     const geometry = new THREE.BufferGeometry().setFromPoints(positions.map(p => new THREE.Vector3(p.x, p.y, p.z)));
@@ -32,6 +33,7 @@ export function addTrajectory(positions, color, scene) {
     scene.add(line);
 }
 
+// добавление точки на сцену по координатам и радиусу
 export function addPoint(radius, color, coordinates, scene) {
     const startPointGeometry = new THREE.SphereGeometry(0.01, 16, 16);
     const startPointMaterial = new THREE.MeshBasicMaterial({color: color});
@@ -42,13 +44,17 @@ export function addPoint(radius, color, coordinates, scene) {
     return startPoint;
 }
 
-export function addVector(vector1, vector2, color, scene) {
-    const arrowHelper = new THREE.ArrowHelper(vector2.clone().sub(vector1.clone()).normalize(), vector1, vector2.clone().sub(vector1.clone()).length(), color);
+
+// добавление вектора на сцену по начальной и конечной точкам
+export function addVector(point1, point2, color, scene) {
+    const arrowHelper = new THREE.ArrowHelper(point2.clone().sub(point1.clone()).normalize(), point1, point2.clone().sub(point1.clone()).length(), color);
     scene.add(arrowHelper);
     return arrowHelper;
 }
 
-export function clearCanvas(e, dispatch, scene, renderer, camera) {
+
+// полная очистка сцены и отрисовка только координатных осей
+export function clearCanvas(e, dispatch, scene, renderer, camera, only_clear) {
     e.preventDefault();
     dispatch(clearPositions());
     dispatch(clearVelocity());
@@ -59,23 +65,28 @@ export function clearCanvas(e, dispatch, scene, renderer, camera) {
         });
     }
 
-    let parent = document.querySelector(".render_place");
-    if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
-    parent.appendChild(renderer.domElement);
+    // если установлен флаг, то надо просто удалить все элементы со сцены
+    if (!only_clear) {
+        let parent = document.querySelector(".render_place");
+        if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
+        parent.appendChild(renderer.domElement);
 
-    // Добавление координатных осей
-    scene.add(new THREE.AxesHelper(1));
-    addBaseXYZ(scene, 1);
+        // Добавление координатных осей
+        scene.add(new THREE.AxesHelper(1));
+        addBaseXYZ(scene, 1);
 
-    animate(renderer, scene, camera);
+        animate(renderer, scene, camera);
+    }
 }
 
+// добавление подписей координатных осей на сцену с определённой длиной
 export function addBaseXYZ(scene, len) {
     addLabel('X', new THREE.Vector3(len, 0, 0), scene);
     addLabel('Y', new THREE.Vector3(0, len, 0), scene);
     addLabel('Z', new THREE.Vector3(0, 0, len), scene);
 }
 
+// добавление подписи на сцену по координатам
 export function addLabel(text, position, scene) {
     const loader = new FontLoader();
     loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
