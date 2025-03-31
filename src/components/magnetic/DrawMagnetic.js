@@ -25,8 +25,8 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
     if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
     parent.appendChild(renderer.domElement);
     ///=======================
-    const positions = [];
-    positions.push(r0.clone());
+    //const positions = [];
+    //positions.push(r0.clone());
     const positions_center = [];
     const positions2 = [];
     positions2.push(r0.clone());
@@ -35,7 +35,7 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
     if (q === 0) {
         for (let i = 1; i < 100; i++){
             const newPosition = r0.clone().add(v0.clone().multiplyScalar(i*allTime/100));
-            positions.push(newPosition.clone());
+            positions2.push(newPosition.clone());
 
             addPositionAndVelocity(i, newPosition, v0, i*allTime/100, 7, dispatch);
         }
@@ -129,46 +129,46 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
 
 
                 // метод, использующий только v0, h, T (невозможно добавить внешние силы)
-                const new_start_B = point_start_B.clone().add(normalization_B.clone().multiplyScalar(h * (360 / count_of_elem_one_circle) * i / 360));
-                // Преобразование угла в радианы
-                const theta = (360 / count_of_elem_one_circle) * i * (Math.PI / 180) * Math.sign(-q);
-                // Компоненты оси
-                const u_x = normalization_B.x;
-                const u_y = normalization_B.y;
-                const u_z = normalization_B.z;
-                // Матрица поворота
-                const cosTheta = Math.cos(theta);
-                const sinTheta = Math.sin(theta);
-                const rotationMatrix = [
-                    [
-                        cosTheta + (1 - cosTheta) * u_x * u_x,
-                        (1 - cosTheta) * u_x * u_y - u_z * sinTheta,
-                        (1 - cosTheta) * u_x * u_z + u_y * sinTheta
-                    ],
-                    [
-                        (1 - cosTheta) * u_y * u_x + u_z * sinTheta,
-                        cosTheta + (1 - cosTheta) * u_y * u_y,
-                        (1 - cosTheta) * u_y * u_z - u_x * sinTheta
-                    ],
-                    [
-                        (1 - cosTheta) * u_z * u_x - u_y * sinTheta,
-                        (1 - cosTheta) * u_z * u_y + u_x * sinTheta,
-                        cosTheta + (1 - cosTheta) * u_z * u_z
-                    ]
-                ];
-                // Перемножаем матрицу поворота с вектором
-                const new_R_vector = new THREE.Vector3(
-                    rotationMatrix[0][0] * R_vector.x + rotationMatrix[0][1] * R_vector.y + rotationMatrix[0][2] * R_vector.z,
-                    rotationMatrix[1][0] * R_vector.x + rotationMatrix[1][1] * R_vector.y + rotationMatrix[1][2] * R_vector.z,
-                    rotationMatrix[2][0] * R_vector.x + rotationMatrix[2][1] * R_vector.y + rotationMatrix[2][2] * R_vector.z
-                );
+                // const new_start_B = point_start_B.clone().add(normalization_B.clone().multiplyScalar(h * (360 / count_of_elem_one_circle) * i / 360));
+                // // Преобразование угла в радианы
+                // const theta = (360 / count_of_elem_one_circle) * i * (Math.PI / 180) * Math.sign(-q);
+                // // Компоненты оси
+                // const u_x = normalization_B.x;
+                // const u_y = normalization_B.y;
+                // const u_z = normalization_B.z;
+                // // Матрица поворота
+                // const cosTheta = Math.cos(theta);
+                // const sinTheta = Math.sin(theta);
+                // const rotationMatrix = [
+                //     [
+                //         cosTheta + (1 - cosTheta) * u_x * u_x,
+                //         (1 - cosTheta) * u_x * u_y - u_z * sinTheta,
+                //         (1 - cosTheta) * u_x * u_z + u_y * sinTheta
+                //     ],
+                //     [
+                //         (1 - cosTheta) * u_y * u_x + u_z * sinTheta,
+                //         cosTheta + (1 - cosTheta) * u_y * u_y,
+                //         (1 - cosTheta) * u_y * u_z - u_x * sinTheta
+                //     ],
+                //     [
+                //         (1 - cosTheta) * u_z * u_x - u_y * sinTheta,
+                //         (1 - cosTheta) * u_z * u_y + u_x * sinTheta,
+                //         cosTheta + (1 - cosTheta) * u_z * u_z
+                //     ]
+                // ];
+                // // Перемножаем матрицу поворота с вектором
+                // const new_R_vector = new THREE.Vector3(
+                //     rotationMatrix[0][0] * R_vector.x + rotationMatrix[0][1] * R_vector.y + rotationMatrix[0][2] * R_vector.z,
+                //     rotationMatrix[1][0] * R_vector.x + rotationMatrix[1][1] * R_vector.y + rotationMatrix[1][2] * R_vector.z,
+                //     rotationMatrix[2][0] * R_vector.x + rotationMatrix[2][1] * R_vector.y + rotationMatrix[2][2] * R_vector.z
+                // );
                 // const newVelocity = new THREE.Vector3(
                 //     rotationMatrix[0][0] * v0.x + rotationMatrix[0][1] * v0.y + rotationMatrix[0][2] * v0.z,
                 //     rotationMatrix[1][0] * v0.x + rotationMatrix[1][1] * v0.y + rotationMatrix[1][2] * v0.z,
                 //     rotationMatrix[2][0] * v0.x + rotationMatrix[2][1] * v0.y + rotationMatrix[2][2] * v0.z
                 // );
-                const newPosition = new_start_B.clone().sub(new_R_vector);
-                positions.push(newPosition.clone());
+                // const newPosition = new_start_B.clone().sub(new_R_vector);
+                // positions.push(newPosition.clone());
             }
 
             if (addConstructionsFlag) {
@@ -186,7 +186,7 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
                 // траектория центральных точек
                 addTrajectory(positions_center, "green", scene)
                 // Добавление траектории по другому методу в сцену
-                addTrajectory(positions, "yellow", scene);
+                //addTrajectory(positions, "yellow", scene);
             }
 
             // Добавление плоскости с нормалью - вектором магнитной индукции

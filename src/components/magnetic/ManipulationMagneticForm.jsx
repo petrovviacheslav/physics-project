@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { DrawMagnetic } from "./DrawMagnetic";
-import { useDispatch } from "react-redux";
-import { clearPositions, clearVelocity } from "../../store/dataSlice";
-import { clearCanvas } from "../../util/addsToScene";
+import {useState} from "react";
+import {DrawMagnetic} from "./DrawMagnetic";
+import {useDispatch} from "react-redux";
+import {clearPositions, clearVelocity} from "../../store/dataSlice";
+import {clearCanvas} from "../../util/addsToScene";
 
-const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
+const ManipulationMagneticForm = ({scene, camera, renderer}) => {
     const dispatch = useDispatch();
 
     const initialParticles = [
@@ -45,16 +45,16 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
         induction_y: 0,
         induction_z: 2
     });
-    // const [fallenTime, setFallenTime] = useState(5);
+
     const [addConstructions, setAddConstructions] = useState(true);
 
     const updateParticleField = (index, field, value) => {
         const updatedParticles = particles.map((particle, i) => {
             if (i === index) {
                 if (field === "need") {
-                    return { ...particle, [field]: value };
+                    return {...particle, [field]: value};
                 }
-                return { ...particle, [field]: parseFloat(value) };
+                return {...particle, [field]: parseFloat(value)};
             }
             return particle;
         });
@@ -70,7 +70,7 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
     };
 
     const updateInduction = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setInduction(prevData => ({
             ...prevData,
             [name]: parseFloat(value)
@@ -93,8 +93,7 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
             });
         }
 
-        // Передаём массив частиц, а также induction, fallenTime и addConstructions как и прежде.
-        DrawMagnetic(particles, induction, 5, addConstructions, scene, camera, renderer, dispatch);
+        DrawMagnetic(particles, induction, 3, addConstructions, scene, camera, renderer, dispatch);
     };
 
     return (
@@ -105,9 +104,9 @@ const ManipulationMagneticForm = ({ scene, camera, renderer }) => {
                     <thead>
                     <tr>
                         <th className="first-cell">Параметр</th>
-                        <th className="first-cell">Частица 1 (red)</th>
-                        <th className="first-cell">Частица 2 (green)</th>
-                        <th className="first-cell">Частица 3 (blue)</th>
+                        <th className="first-cell">Частица 1</th>
+                        <th className="first-cell">Частица 2</th>
+                        <th className="first-cell">Частица 3</th>
                     </tr>
                     </thead>
                     <tbody>

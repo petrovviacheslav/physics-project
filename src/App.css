@@ -58,6 +58,17 @@
     align-items: center;
 }
 
+.form_base {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/*.manipulation-electrostatic-form {*/
+/*    margin: 10px auto;*/
+/*    text-align: center;*/
+/*}*/
+
 @media (max-width: 1250px) {
     .container {
         grid-template-columns: 1fr;

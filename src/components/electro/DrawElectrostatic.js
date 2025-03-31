@@ -1,11 +1,8 @@
-import {setFall, setGravity} from "../../store/dataSlice";
 import * as THREE from "three";
 import {addBaseXYZ, addPlane, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
 import {animate} from "../../util/animate";
 import {addPositionAndVelocity} from "../../util/addsToStore";
 
-
-// export default function DrawElectrostatic(position_arr, velocity_arr, tension_arr, gravity, fallenTime, scene, camera, renderer, dispatch) {
 export default function DrawElectrostatic(particles_arr, tension_arr, gravity, fallenTime, scene, camera, renderer, dispatch) {
     console.log('===================');
     console.log('DrawElectrostatic');
@@ -14,88 +11,132 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
     const powTenQ = 1e-9;
     const powTenM = 1e-6;
 
-    const useGravity = Boolean(gravity);
-    dispatch(setGravity(useGravity));
-    const q = Number(particles_arr[0].discharge) * powTenQ;// заряд частицы, Кл
-    const m = 9.1*powTenM; // масса частицы, кг
     const E = new THREE.Vector3(Number(tension_arr.tension_x) * powTenE, Number(tension_arr.tension_y) * powTenE, Number(tension_arr.tension_z) * powTenE); // магнитное поле, Тл
-    const v0 = new THREE.Vector3(Number(particles_arr[0].velocity_x), Number(particles_arr[0].velocity_y), Number(particles_arr[0].velocity_z)); // начальная скорость, м/с
-    const r0 = new THREE.Vector3(Number(particles_arr[0].position_x), Number(particles_arr[0].position_y), Number(particles_arr[0].position_z)); // начальная позиция, м
+
+    const useGravity = Boolean(gravity);
+
+    const m = 9.1 * powTenM; // масса частицы, кг
+
+    let q_arr = [];
+    let r0_arr = [];
+    let v0_arr = [];
+    let base_a_arr = [];
+    let start_pos_arr = [];
+    let n = 0;
+
+    for (let j = 0; j < particles_arr.length; j++) {
+        if (particles_arr[j].need === true) {
+            const discharge = Number(particles_arr[j].discharge);
+            q_arr.push(discharge * powTenQ);
+            r0_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
+            v0_arr.push(new THREE.Vector3(Number(particles_arr[j].velocity_x), Number(particles_arr[j].velocity_y), Number(particles_arr[j].velocity_z)));
+
+            let base_a = E.clone().multiplyScalar(q_arr[0] / m);
+            if (discharge === 0) {
+                base_a.x = 0;
+                base_a.y = 0;
+                base_a.z = 0;
+            }
+            if (useGravity) base_a.z -= 9.82;
+            base_a_arr.push(base_a);
+
+            start_pos_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
+            n++;
+        }
+
+    }
 
     const parts = 200; // делим время на столько частей
 
-    const a = E.clone().multiplyScalar(q / m);
     let allTime = Number(fallenTime);
-    if (q===0) {
-        a.x = 0;
-        a.y = 0;
-        a.z = 0;
-    }
-    if (useGravity) a.z = a.z - 9.82;
-    console.log("a = [" + a.toArray() + "]");
 
     let parent = document.querySelector(".render_place");
     if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
     parent.appendChild(renderer.domElement);
 
-    // проверка, врежется ли заряд в пол
-    let fallTime = allTime
-    const check_a = a.z / 2; // коэффициент a
-    const check_b = v0.z; // коэффициент b
-    const check_c = r0.z; // коэффициент c
-    const discriminant = Math.pow(check_b, 2) - 4 * check_a * check_c;
-    if (discriminant >= 0) {
-        const first = (-check_b + Math.sqrt(discriminant)) / (2 * check_a);
-        const second = (-check_b - Math.sqrt(discriminant)) / (2 * check_a);
-        if (first > 0 && second > 0) {
-            fallTime = Math.min(first, second);
-        } else if (!(first < 0 && second < 0)) fallTime = Math.max(first, second);
-    }
-    if (fallTime > allTime) {
-        fallTime = allTime
-    }
-    console.log("fallTime = " + fallTime);
-    dispatch(setFall(fallTime !== allTime));
+    const positions = [[], [], []];
 
-    const positions = [];
-    positions.push(r0.clone());
-    addPositionAndVelocity(0, r0.clone(), v0.clone(), 0, 0, dispatch);
+    for (let j = 0; j < n; j++) {
+        positions[j].push(r0_arr[j].clone());
+        addPositionAndVelocity(0, r0_arr[j].clone(), v0_arr[j].clone(), 0, 0, dispatch, j);
+    }
 
     // ====================================
-    let i = 1;
-    function iterationCounting() {
-        const pos = r0.clone().add(v0.clone().multiplyScalar(allTime * i / parts)).add(a.clone().multiplyScalar(Math.pow(allTime * i / parts, 2) / 2)); // newPosition = r0 + v0t + at^2 / 2
-        const vel = v0.clone().add(a.clone().multiplyScalar(allTime * i / parts)); // newVelocity = v0 + at
-        return [pos.clone(), vel.clone()];
+    function calc_force_kulona(q1, q2, r_between) {
+        return (9 * 10e9) * Math.abs(q1 * q2) / (r_between * r_between)
     }
+
+    function calc_r_between(pos1, pos2) {
+        return pos1.clone().sub(pos2).length()
+    }
+
     // ===================================
-
-    let newPosition = new THREE.Vector3();
-    let newVelocity = new THREE.Vector3();
+    console.log("перед подсчётом всего");
+    let i = 1;
     while (i < parts) {
-        [ newPosition, newVelocity ] = iterationCounting();
+        let curr_a_arr = [...base_a_arr];
+        if (n === 2) {
+            const r_between01 = calc_r_between(r0_arr[0], r0_arr[1]);
+            const len_force01 = calc_force_kulona(q_arr[0], q_arr[1], r_between01);
+            const force01 = r0_arr[0].clone().sub(r0_arr[1].clone()).normalize().multiplyScalar(len_force01);
 
-        if (i >= parts * (fallTime / allTime)) {
-            newPosition.z = 0;
-            newVelocity.z = 0;
+            curr_a_arr[0].add(force01.clone().divideScalar(m * Math.sign(q_arr[0] * q_arr[1])));
+            curr_a_arr[1].add(force01.clone().divideScalar(-m * Math.sign(q_arr[0] * q_arr[1])));
+
+            if (n === 3) {
+                const r_between12 = calc_r_between(r0_arr[1], r0_arr[2]);
+                const len_force12 = calc_force_kulona(q_arr[1], q_arr[2], r_between12);
+                const force12 = r0_arr[1].clone().sub(r0_arr[2].clone()).normalize().multiplyScalar(len_force12);
+
+                curr_a_arr[1].add(force12.clone().divideScalar(m * Math.sign(q_arr[1] * q_arr[2])));
+                curr_a_arr[2].add(force12.clone().divideScalar(-m * Math.sign(q_arr[1] * q_arr[2])));
+
+                const r_between02 = calc_r_between(r0_arr[0], r0_arr[2]);
+                const len_force02 = calc_force_kulona(q_arr[0], q_arr[2], r_between02);
+                const force02 = r0_arr[0].clone().sub(r0_arr[2].clone()).normalize().multiplyScalar(len_force02);
+
+                curr_a_arr[0].add(force02.clone().divideScalar(m * Math.sign(q_arr[0] * q_arr[2])));
+                curr_a_arr[2].add(force02.clone().divideScalar(-m * Math.sign(q_arr[0] * q_arr[2])));
+            }
         }
-        positions.push(newPosition.clone());
 
-        addPositionAndVelocity(i, newPosition, newVelocity, allTime * i / 100, 3, dispatch);
+        for (let j = 0; j < n; j++) {
+            r0_arr[j].add(v0_arr[j].clone().multiplyScalar(allTime * i / parts)).add(curr_a_arr[j].clone().multiplyScalar(Math.pow(allTime * i / parts, 2) / 2));
+            v0_arr[j].add(curr_a_arr[j].clone().multiplyScalar(allTime * i / parts))
+
+            if (r0_arr[j].z < 0) {
+                r0_arr[j].z = 0
+            }
+            if (v0_arr[j].z < 0) {
+                v0_arr[j].z = 0
+            }
+
+            positions[j].push(r0_arr[j].clone());
+            addPositionAndVelocity(i, r0_arr[j].clone(), v0_arr[j].clone(), allTime * i / parts, 3, dispatch, j);
+        }
+
         i++;
     }
+    console.debug("посчитали всё");
+    console.debug(start_pos_arr);
+    for (let j = 0; j < n; j++) {
+        // Добавление траектории в сцену
+        addTrajectory(positions[j], 0xff0000, scene);
+        // Добавление начальной точки
+        addPoint(0.01, 0x4169E1, start_pos_arr[j], scene);
+    }
+    console.debug("добавили траектории");
 
-    // Добавление траектории в сцену
-    addTrajectory(positions, 0xff0000, scene);
-    // Добавление начальной точки
-    addPoint(0.01, 0x4169E1, r0, scene);
     // Добавление вектора напряжения из почти начальной точки
-    addVector(r0.clone().add(new THREE.Vector3(0,0,0.5)), r0.clone().add(E.clone().divideScalar(powTenE).add(new THREE.Vector3(0,0,0.5))),0xEE82EE, scene);
+    addVector(new THREE.Vector3(0, 0, 0), E.clone().divideScalar(powTenE), 0xEE82EE, scene);
+
     // Добавление плоскости z = 0
     addPlane(0, 0, 1, 0, 7, 0x808080, scene);
-    // Добавление координатных осей
-    scene.add(new THREE.AxesHelper(Math.max(r0.x, r0.y, r0.z) + 1));
-    addBaseXYZ(scene, Math.max(r0.x, r0.y, r0.z) + 1.1);
 
+    // Добавление координатных осей
+    scene.add(new THREE.AxesHelper(1));
+    addBaseXYZ(scene, 1.1);
+
+    console.debug("приступили к отрисовке");
     animate(renderer, scene, camera);
 }
