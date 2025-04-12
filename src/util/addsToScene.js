@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {clearPositions, clearVelocity} from "../store/dataSlice";
-import {animate} from "./animate";
+import {animate} from "./settingsScene";
 import {FontLoader, TextGeometry} from "three/addons";
 
 // Добавление плоскости по формуле Ax + By + Cz + D = 0

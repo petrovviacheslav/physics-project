@@ -1,13 +1,10 @@
 import {useSelector} from "react-redux";
 import {useState, useEffect} from "react";
 import * as THREE from "three";
-import {animate} from "../../util/animate";
+import {animate} from "../../util/settingsScene";
 import {addPoint, addVector} from "../../util/addsToScene";
 
 
-// Разместил слайдер для time здесь
-// TODO я заметил, что при первой загрузке график управляется ахуенно – плавно, чётенько. Но если немного подрочить время – всё к хуям ломается
-// TODO когда меняется ширина значений в ячейках таблицы – меняется ширина самих ячеек. Короче, таблица ребит если быстро дрочить слайдер. Не красиво, потом поменяю
 const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     const positionsFromStore = useSelector((state) => state.data.positions);
     const velocitiesFromStore = useSelector((state) => state.data.velocities);
@@ -27,7 +24,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     useEffect(() => {
         if (selectedTime > maxTime) {
             setSelectedTime(maxTime);
-            updateForSelectedTime(maxTime);
+            // updateForSelectedTime(maxTime);
         }
     }, [maxTime, selectedTime]);
 
@@ -62,15 +59,13 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
         });
 
         // через этот принт потом будем дебажить ошибки
-        console.debug(selectedData);
+        // console.debug(selectedData);
 
         // обновляем сцену:
-        // 1. Удаляем предыдущие объекты (на всякий раз проходимся несколько раз)
-        for (let j = 0; j < 3; j++) {
-            for (let i = 0; i < n; i++) {
-                if (currentPoint[i]) scene.remove(currentPoint[i]);
-                if (currentVelocity[i]) scene.remove(currentVelocity[i]);
-            }
+        // 1. Удаляем предыдущие объекты
+        for (let i = 0; i < n; i++) {
+            if (currentPoint[i]) scene.remove(currentPoint[i]);
+            if (currentVelocity[i]) scene.remove(currentVelocity[i]);
         }
 
         // 2. Создаём новые
@@ -105,9 +100,10 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     };
 
     // при изменении данных из стора (например, после пересчёта траектории) обновляем отображение
-    useEffect(() => {
-        updateForSelectedTime(selectedTime);
-    }, [positionsFromStore, selectedTime, velocitiesFromStore]);
+    // именно из-за этого кода возникают ошибки при отрисовке векторов скоростей
+    // useEffect(() => {
+    //     updateForSelectedTime(selectedTime);
+    // }, [positionsFromStore, selectedTime, velocitiesFromStore]);
 
 
     // отрисовка таблицы с координатами и скоростями всех частиц
@@ -147,6 +143,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                 />
                 <span>{selectedTime.toFixed(2)}</span>
             </div>
+            {/*TODO: зафикировать ширину значений в ячейках таблицы, чтобы таблица не рябила*/}
             <div className="table-container">
                 <table className="data_table">
                     <thead>

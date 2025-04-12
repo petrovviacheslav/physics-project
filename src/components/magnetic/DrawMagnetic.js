@@ -1,207 +1,180 @@
 import * as THREE from "three";
 import {addBaseXYZ, addPlane, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
-import {animate} from "../../util/animate";
+import {add_renderer_to_dom, animate} from "../../util/settingsScene";
 import {addPositionAndVelocity} from "../../util/addsToStore";
+import {calculateCoulombForceForAllParticles} from "../../util/calculator";
 
 export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstructionsFlag, scene, camera, renderer, dispatch) {
-    console.log('===================');
-    console.log('DrawMagnetic');
+    console.debug('===================');
+    console.debug('DrawMagnetic');
     // Константы и данные
     const powTenQ = 1e-14;
     const powTenB = 1e-1;
     const powTenV0 = 1e1;
-    const powTenTime = 1e-1;
+    // const powTenTime = 1e-1;
+    const powTenTime = 1;
     const powTenM = 1e-16;
 
-    const q = Number(particles_arr[0].discharge) * powTenQ; // заряд частицы, Кл
     const m = 1.1 * powTenM; // масса частицы, кг
     const B = new THREE.Vector3(powTenB * Number(induction_arr.induction_x), powTenB * Number(induction_arr.induction_y), powTenB * Number(induction_arr.induction_z)); // магнитное поле, Тл
-    const v0 = new THREE.Vector3(powTenV0 * Number(particles_arr[0].velocity_x), powTenV0 * Number(particles_arr[0].velocity_y), powTenV0 * Number(particles_arr[0].velocity_z)); // начальная скорость, м/с
-    const r0 = new THREE.Vector3(Number(particles_arr[0].position_x), Number(particles_arr[0].position_y), Number(particles_arr[0].position_z)); // начальная позиция, м
-    const allTime = Number(fallenTime) * powTenTime;
+
+    let q_arr = [];
+    let cur_pos_arr = [];
+    let cur_vel_arr = [];
+    let start_pos_arr = [];
+    // количество используемых частиц
+    let n = 0;
+
+    // распределение всех данных по нужным переменным и проверка, какие заряды задействуются
+    for (let j = 0; j < particles_arr.length; j++) {
+        if (particles_arr[j].need === true) {
+            const discharge = Number(particles_arr[j].discharge);
+            q_arr.push(discharge * powTenQ);
+            cur_pos_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
+            cur_vel_arr.push(new THREE.Vector3(Number(particles_arr[j].velocity_x) * powTenV0, Number(particles_arr[j].velocity_y) * powTenV0, Number(particles_arr[j].velocity_z) * powTenV0));
+
+            start_pos_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
+            n++;
+        }
+
+    }
+    // делим время на столько частей
+    const parts = 300;
+    let allTime = Number(fallenTime) * powTenTime;
 
     //=============
-    let parent = document.querySelector(".render_place");
-    if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
-    parent.appendChild(renderer.domElement);
-    ///=======================
-    //const positions = [];
-    //positions.push(r0.clone());
-    const positions_center = [];
-    const positions2 = [];
-    positions2.push(r0.clone());
-    addPositionAndVelocity(0, r0.clone(), v0.clone(), 0, 0, dispatch);
+    add_renderer_to_dom(renderer.domElement);
+    //=======================
+    // const positions_center = [];
+    const positions = [[], [], []];
+    // добавление начальных точек и скоростей в хранилище
+    for (let j = 0; j < n; j++) {
+        positions[j].push(cur_pos_arr[j].clone());
+        addPositionAndVelocity(0, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), 0, 4, dispatch, j);
+    }
 
-    if (q === 0) {
-        for (let i = 1; i < 100; i++){
-            const newPosition = r0.clone().add(v0.clone().multiplyScalar(i*allTime/100));
-            positions2.push(newPosition.clone());
+    // TODO: если заряд равен 0 то что-то интересное происходит... (реализовать)
+    // ============================
+    // база
+    const mainB = B.length();
+    const is_monitor_length_preservation = true;
+    // =======================
 
-            addPositionAndVelocity(i, newPosition, v0, i*allTime/100, 7, dispatch);
+    // const directionChecker = [
+    //     Math.sign(v0.x) * Math.sign(B.x) < 0,
+    //     Math.sign(v0.y) * Math.sign(B.y) < 0,
+    //     Math.sign(v0.z) * Math.sign(B.z) < 0
+    // ].filter(Boolean).length; // Считаем количество истинных значений
+    // let h = period * h_projection_v.length();
+    // if (directionChecker === 2 || directionChecker === 3) h = (-1) * h;
+    // const R_vector = directionForce.clone().normalize().multiplyScalar(mainR);
+    // const point_start_B = r0.clone().add(R_vector);
+
+    for (let i = 1; i < parts; i++) {
+        let h_projection_v_arr = [];
+        let plane_projection_v_arr = [];
+        // изначальные длины проекции скоростей на плоскость, перпендикулярную вектору магнитной индукции
+        let plane_projection_length_v_arr = [];
+        let a_lorenz_arr = [];
+        let a_coulomb_arr = [];
+
+        // useless
+        // let mainR_arr = [];
+        // let period_arr = [];
+        // let curDirectionForce_arr = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
+        // let curForceLength_arr = [];
+
+        for (let j = 0; j < n; j++) {
+            // TODO: добавить проверку, что скорость > 10^-8 (машинная ошибка) иначе частица тупо стоит на месте
+            // TODO: добавить проверку, что projection.length() > 10^-8, иначе значит V и B сонаправлены, следовательно частица движется только под действием скорости
+
+            const scalarMultiply = cur_vel_arr[j].x * B.x + cur_vel_arr[j].y * B.y + cur_vel_arr[j].z * B.z;
+            const h_projection_v = B.clone().multiplyScalar(scalarMultiply / B.lengthSq());
+            h_projection_v_arr.push(h_projection_v);
+
+            const plane_projection_v = cur_vel_arr[j].clone().sub(h_projection_v);
+            plane_projection_v_arr.push(plane_projection_v.clone());
+            plane_projection_length_v_arr.push(plane_projection_v.clone().length());
+
+            const mainR = m * plane_projection_v.length() / (mainB * q_arr[j]);
+            // mainR_arr.push(mainR);
+            const period = 2 * Math.PI * mainR / plane_projection_v.length();
+            // period_arr.push(period);
+
+            // направление действия силы лоренца
+            let cur_direction_lorenz = new THREE.Vector3();
+            cur_direction_lorenz.crossVectors(cur_vel_arr[j], B);
+
+            // sin(curVB) = sqrt(1-cos**2) = sqrt(1 - (|curV x B|/|curV|*|B|)**2)
+            const sinVB = Math.sqrt(1 - (scalarMultiply / (cur_vel_arr[j].length() * mainB)) ** 2);
+
+            // length F = q*V*B*sin(curVB)
+            const cur_lorenz_length = q_arr[j] * cur_vel_arr[j].length() * mainB * sinVB;
+
+            // vector a = F/m
+            a_lorenz_arr.push(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_lorenz_length / m));
+
+            a_coulomb_arr.push(new THREE.Vector3(0, 0, 0));
+
+            // console.debug("точка j = " + j + "; итерация = " + i)
+            // console.debug("period = " + period + "; \nh_projection_v = " + h_projection_v.toArray() +
+            //     "; \nplane_projection_v = " + plane_projection_v.toArray() + "; \ncur_direction_lorenz = " +
+            //     cur_direction_lorenz.toArray() + "; \nR = " + mainR);
         }
 
-        if (addConstructionsFlag) {
-            // Добавление вектора индукции
-            addVector(r0.clone(), r0.clone().add(B.clone().divideScalar(powTenB)), 0xEE82EE, scene);
-        }
-    } else {
-        // ============================
-        // база
-        const mainB = B.length();
-        const mainV = v0.length();
-        const is_monitor_length_preservation = true;
+        // positions_center.push(curPosit.clone().add(curDirectionForce.clone().normalize().multiplyScalar(mainR)));
 
-        // =================================
-        // всякие штуки линаловские
-        const normalization_B = B.clone().normalize();
-        const D = -(normalization_B.x * r0.x + normalization_B.y * r0.y + normalization_B.z * r0.z);
+        // считаем силу Кулона
+        if (n > 1) a_coulomb_arr = calculateCoulombForceForAllParticles(n, cur_pos_arr, q_arr, a_coulomb_arr, m)
 
-        // =======================
-        // возможно это придётся делать на каждой итерации, если добавлять новые внешние силы,
-        // а после изменения скорости приводить её к только что подсчитанному projection.length()
-        const scalarMultiply = v0.x * B.x + v0.y * B.y + v0.z * B.z;
-        const h_projection_v = B.clone().multiplyScalar(scalarMultiply / B.lengthSq());
-        const projection = v0.clone().sub(h_projection_v);
+        // обновление данных позиции и скорости в массиве и хранилище
+        for (let j = 0; j < n; j++) {
+            let united_a = a_coulomb_arr[j].clone().add(a_lorenz_arr[j].clone());
+            cur_pos_arr[j].add(cur_vel_arr[j].clone().multiplyScalar(allTime / parts)).add(united_a.multiplyScalar(Math.pow(allTime / parts, 2) / 2));
 
-        // TODO: добавить проверку, что скорость > 10^-8 (машинная ошибка) иначе частица тупо стоит на месте
-        // TODO: добавить проверку, что projection.length() > 10^-8, иначе значит V и B сонаправлены, следовательно частица движется только под действием скорости
+            // приведение той части, которая находится в плоскости перпендикулярной вектору магнитной индукции
+            plane_projection_v_arr[j].add(a_lorenz_arr[j].clone().multiplyScalar(allTime / parts));
+            if (is_monitor_length_preservation) plane_projection_v_arr[j].normalize().multiplyScalar(plane_projection_length_v_arr[j]);
+            cur_vel_arr[j] = plane_projection_v_arr[j].clone().add(h_projection_v_arr[j].clone());
 
-        // ==========================
-        // радиус получается = как для той ситуации когда вектор скорости перпендикулярен вектору индукции
-        const directionForce = new THREE.Vector3();
-        directionForce.crossVectors(v0, B);
+            cur_vel_arr[j].add(a_coulomb_arr[j].clone().multiplyScalar(allTime / parts))
 
-        const mainR = m * projection.length() / (mainB*q);
-        const period = 2 * Math.PI * mainR / projection.length();
-
-        const directionChecker = [
-            Math.sign(v0.x) * Math.sign(B.x) < 0,
-            Math.sign(v0.y) * Math.sign(B.y) < 0,
-            Math.sign(v0.z) * Math.sign(B.z) < 0
-        ].filter(Boolean).length; // Считаем количество истинных значений
-        let h = period * h_projection_v.length();
-        if (directionChecker === 2 || directionChecker === 3) h = (-1) * h;
-        const R_vector = directionForce.clone().normalize().multiplyScalar(mainR);
-        const point_start_B = r0.clone().add(R_vector);
-
-        // пересчитывается на каждой итерации
-        let curV = v0.clone();
-        let curAcceleration = 0;
-        let curPosit = r0.clone();
-        let curVProjection = projection.clone();
-        let curDirectionForce = new THREE.Vector3();
-        let curForceLength = 0;
-        let sinVB = Math.sqrt(1-(scalarMultiply/(mainV*mainB))**2)
-
-        const count_of_elem_one_circle = 360;
-        console.log("mainB = " + mainB + " Tesla;\nmainV = " + mainV + " m/s;\nR = " + mainR + " m;\nperiod = " +
-            period + " s;\niterations = " + count_of_elem_one_circle * allTime / period + ";\nstart sinVB = " + sinVB +
-            ";\nh = " + h + " m;\ndirectionChecker = " + directionChecker + ";\npoint_start_B = [" + point_start_B.toArray() + "]" +
-            ";\nnormalization_B = [" + normalization_B.toArray() + "];\nstart a = " + projection.lengthSq() / mainR +
-            " m/s**2;\nprojection = [" + projection.toArray() + "];\nh_projection_v = [" + h_projection_v.toArray() +
-            "];\nprojection x B = " + (projection.x * B.x + projection.y * B.y + projection.z * B.z) +
-            ";\nskalProizv = " + scalarMultiply);
-
-        if (allTime / period <= 5) {
-
-            for (let i = 1; i < count_of_elem_one_circle * allTime / period; i++) {
-                curDirectionForce.crossVectors(curV, B); // direction of Force and Acceleration
-
-                sinVB = Math.sqrt(1 - ((curV.x * B.x + curV.y * B.y + curV.z * B.z) / (curV.length() * mainB)) ** 2) // sin(curVB) = sqrt(1-cos**2) = sqrt(1 - (|curV x B|/|curV|*|B|)**2)
-                curForceLength = q * curV.length() * mainB * sinVB; // F = q*V*B*sin(curVB)
-
-                curAcceleration = curDirectionForce.clone().normalize().multiplyScalar(curForceLength / m); // a = F/m
-                //if (is_monitor_length_preservation) curAcceleration.normalize().multiplyScalar(start_a_length);
-
-                //curAcceleration.z = curAcceleration.z - 9.81;
-
-                curPosit.add(curV.clone().multiplyScalar(period / count_of_elem_one_circle)).add(curAcceleration.clone().multiplyScalar(period * period / (count_of_elem_one_circle * count_of_elem_one_circle)));
-                // приведение той части, которая находится в плоскости к длине projection
-                curVProjection.add(curAcceleration.clone().multiplyScalar(period / count_of_elem_one_circle));
-                if (is_monitor_length_preservation) curVProjection.normalize().multiplyScalar(projection.length())
-                curV = curVProjection.clone().add(h_projection_v.clone());
-
-                // сюда можно дописать влияние других сил на эту точку и изменение скорости и положения под действием них
-
-                positions_center.push(curPosit.clone().add(curDirectionForce.clone().normalize().multiplyScalar(mainR)));
-                positions2.push(curPosit.clone());
-                addPositionAndVelocity(i, curPosit.clone(), curV.clone(), allTime * i / ((360 / count_of_elem_one_circle) * allTime / period), 4, dispatch);
-
-
-                // метод, использующий только v0, h, T (невозможно добавить внешние силы)
-                // const new_start_B = point_start_B.clone().add(normalization_B.clone().multiplyScalar(h * (360 / count_of_elem_one_circle) * i / 360));
-                // // Преобразование угла в радианы
-                // const theta = (360 / count_of_elem_one_circle) * i * (Math.PI / 180) * Math.sign(-q);
-                // // Компоненты оси
-                // const u_x = normalization_B.x;
-                // const u_y = normalization_B.y;
-                // const u_z = normalization_B.z;
-                // // Матрица поворота
-                // const cosTheta = Math.cos(theta);
-                // const sinTheta = Math.sin(theta);
-                // const rotationMatrix = [
-                //     [
-                //         cosTheta + (1 - cosTheta) * u_x * u_x,
-                //         (1 - cosTheta) * u_x * u_y - u_z * sinTheta,
-                //         (1 - cosTheta) * u_x * u_z + u_y * sinTheta
-                //     ],
-                //     [
-                //         (1 - cosTheta) * u_y * u_x + u_z * sinTheta,
-                //         cosTheta + (1 - cosTheta) * u_y * u_y,
-                //         (1 - cosTheta) * u_y * u_z - u_x * sinTheta
-                //     ],
-                //     [
-                //         (1 - cosTheta) * u_z * u_x - u_y * sinTheta,
-                //         (1 - cosTheta) * u_z * u_y + u_x * sinTheta,
-                //         cosTheta + (1 - cosTheta) * u_z * u_z
-                //     ]
-                // ];
-                // // Перемножаем матрицу поворота с вектором
-                // const new_R_vector = new THREE.Vector3(
-                //     rotationMatrix[0][0] * R_vector.x + rotationMatrix[0][1] * R_vector.y + rotationMatrix[0][2] * R_vector.z,
-                //     rotationMatrix[1][0] * R_vector.x + rotationMatrix[1][1] * R_vector.y + rotationMatrix[1][2] * R_vector.z,
-                //     rotationMatrix[2][0] * R_vector.x + rotationMatrix[2][1] * R_vector.y + rotationMatrix[2][2] * R_vector.z
-                // );
-                // const newVelocity = new THREE.Vector3(
-                //     rotationMatrix[0][0] * v0.x + rotationMatrix[0][1] * v0.y + rotationMatrix[0][2] * v0.z,
-                //     rotationMatrix[1][0] * v0.x + rotationMatrix[1][1] * v0.y + rotationMatrix[1][2] * v0.z,
-                //     rotationMatrix[2][0] * v0.x + rotationMatrix[2][1] * v0.y + rotationMatrix[2][2] * v0.z
-                // );
-                // const newPosition = new_start_B.clone().sub(new_R_vector);
-                // positions.push(newPosition.clone());
-            }
-
-            if (addConstructionsFlag) {
-                // Добавление проекции начального вектора скорости на вектор магнитной индукции
-                addVector(r0.clone().add(projection.clone().divideScalar(powTenV0)), r0.clone().add(projection.clone().divideScalar(powTenV0)).add(h_projection_v.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
-                // Добавление проекции начального вектора скорости на плоскость с нормалью - вектором магнитной индукции
-                addVector(r0.clone(), r0.clone().add(projection.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
-                // Добавление вектора индукции
-                if (h !== 0) addVector(point_start_B.clone(), point_start_B.clone().add(normalization_B.clone().multiplyScalar(Math.abs(h) * allTime / period)), 0xEE82EE, scene);
-                else addVector(point_start_B.clone(), point_start_B.clone().add(normalization_B.clone()), 0xEE82EE, scene);
-                // Добавление начального вектора скорости
-                addVector(r0.clone(), r0.clone().add(v0.clone().divideScalar(powTenV0)), 0xffff00, scene);
-                // Добавление R_vector (начальный)
-                addVector(r0.clone(), r0.clone().add(R_vector.clone()), 0xffc0cb, scene);
-                // траектория центральных точек
-                addTrajectory(positions_center, "green", scene)
-                // Добавление траектории по другому методу в сцену
-                //addTrajectory(positions, "yellow", scene);
-            }
-
-            // Добавление плоскости с нормалью - вектором магнитной индукции
-            addPlane(B.x, B.y, B.z, D, 1, 0x808080, scene);
-        } else {
-            alert("Время превысило 5 периодов, к сожалению, строить данную модель слишком затратно, поэтому постарайтесь изменить данные, например, просто уменьшите время движения");
+            positions[j].push(cur_pos_arr[j].clone());
+            addPositionAndVelocity(i, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), allTime * i / parts, 4, dispatch, j);
         }
     }
-    // Добавление траектории по силовому методу в сцену
-    addTrajectory(positions2, 0xff0000, scene);
-    // Добавление начальной точки
-    addPoint(0.01, 0x4169E1, r0, scene);
+
+    if (addConstructionsFlag) {
+    // Добавление проекции начального вектора скорости на вектор магнитной индукции
+    // addVector(r0.clone().add(projection.clone().divideScalar(powTenV0)), r0.clone().add(projection.clone().divideScalar(powTenV0)).add(h_projection_v.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
+
+    // for (let j = 0; j < n; j++) {
+    // Добавление проекции начального вектора скорости на плоскость с нормалью - вектором магнитной индукции
+    // addVector(start_pos_arr[j].clone(), start_pos_arr[j].clone().add(projection_arr[j].clone().divideScalar(powTenV0)), 0xffc0cb, scene);
+    // }
+        // Добавление вектора индукции
+        addVector(new THREE.Vector3(0, 0, 0), (new THREE.Vector3(0, 0, 0)).add(B.clone().normalize()), 0xEE82EE, scene);
+    // Добавление начального вектора скорости
+    // addVector(r0.clone(), r0.clone().add(v0.clone().divideScalar(powTenV0)), 0xffff00, scene);
+    // Добавление R_vector (начальный)
+    // addVector(r0.clone(), r0.clone().add(R_vector.clone()), 0xffc0cb, scene);
+    // траектория центральных точек
+    // addTrajectory(positions_center, "green", scene)
+    }
+
+    // Добавление плоскости с нормалью - вектором магнитной индукции
+    // addPlane(B.x, B.y, B.z, D, 1, 0x808080, scene);
+
+    for (let j = 0; j < n; j++) {
+        // Добавление траектории в сцену
+        addTrajectory(positions[j], 0xff0000, scene);
+        // Добавление начальной точки
+        addPoint(0.01, 0x4169E1, start_pos_arr[j], scene);
+    }
+
     // Добавление координатных осей
-    scene.add(new THREE.AxesHelper(Math.max(r0.x, r0.y, r0.z) + 1));
-    addBaseXYZ(scene, Math.max(r0.x, r0.y, r0.z) + 1.1);
+    scene.add(new THREE.AxesHelper(3));
+    addBaseXYZ(scene, 3.1);
 
     animate(renderer, scene, camera);
 }

@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import {addBaseXYZ, addPlane, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
-import {animate} from "../../util/animate";
+import {add_renderer_to_dom, animate} from "../../util/settingsScene";
 import {addPositionAndVelocity} from "../../util/addsToStore";
+import {calculateCoulombForceForAllParticles} from "../../util/calculator";
 
 export default function DrawElectrostatic(particles_arr, tension_arr, gravity, fallenTime, scene, camera, renderer, dispatch) {
-    console.log('===================');
-    console.log('DrawElectrostatic');
+    console.debug('===================');
+    console.debug('DrawElectrostatic');
     // Константы
     const powTenE = 1e3;
     const powTenQ = 1e-8;
@@ -19,8 +20,8 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
 
     let start_a_arr = [];
     let q_arr = [];
-    let r0_arr = [];
-    let v0_arr = [];
+    let cur_pos_arr = [];
+    let cur_vel_arr = [];
     let start_pos_arr = [];
     // количество используемых частиц
     let n = 0;
@@ -32,8 +33,8 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
 
             const discharge = Number(particles_arr[j].discharge);
             q_arr.push(discharge * powTenQ);
-            r0_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
-            v0_arr.push(new THREE.Vector3(Number(particles_arr[j].velocity_x), Number(particles_arr[j].velocity_y), Number(particles_arr[j].velocity_z)));
+            cur_pos_arr.push(new THREE.Vector3(Number(particles_arr[j].position_x), Number(particles_arr[j].position_y), Number(particles_arr[j].position_z)));
+            cur_vel_arr.push(new THREE.Vector3(Number(particles_arr[j].velocity_x), Number(particles_arr[j].velocity_y), Number(particles_arr[j].velocity_z)));
 
             let base_a = E.clone().multiplyScalar(discharge * powTenQ / m);
             if (discharge === 0) {
@@ -50,95 +51,56 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
         }
 
     }
-    console.debug(start_a_arr[0]);
+    // console.debug(start_a_arr[0]);
 
     // делим время на столько частей
     const parts = 200;
     let allTime = Number(fallenTime);
 
-    let parent = document.querySelector(".render_place");
-    if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
-    parent.appendChild(renderer.domElement);
+    //=============
+    add_renderer_to_dom(renderer.domElement);
+    //=======================
 
     const positions = [[], [], []];
 
     // добавление начальных точек и скоростей в хранилище
     for (let j = 0; j < n; j++) {
-        positions[j].push(r0_arr[j].clone());
-        addPositionAndVelocity(0, r0_arr[j].clone(), v0_arr[j].clone(), 0, 0, dispatch, j);
-    }
-
-    // ====================================
-    function calc_force_kulona(q1, q2, r_between) {
-        if (r_between === 0) r_between = 0.0001;
-        return (9 * 10e9) * Math.abs(q1 * q2) / (r_between * r_between)
-    }
-
-    function calc_r_between(pos1, pos2) {
-        return pos1.clone().sub(pos2).length()
+        positions[j].push(cur_pos_arr[j].clone());
+        addPositionAndVelocity(0, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), 0, 3, dispatch, j);
     }
 
     // ===================================
-    let i = 1;
-    while (i < parts) {
+    for (let i = 1; i < parts; i++) {
         // копирование массива базовых векторов, чтобы он не менялся в цикле
-        let curr_a_arr = [];
+        let a_electro_arr = [];
+        let a_coulomb_arr = [];
         for (let k = 0; k < n; k++) {
-            curr_a_arr.push(new THREE.Vector3(start_a_arr[k].x, start_a_arr[k].y, start_a_arr[k].z));
+            a_electro_arr.push(new THREE.Vector3(start_a_arr[k].x, start_a_arr[k].y, start_a_arr[k].z));
+            a_coulomb_arr.push(new THREE.Vector3(0, 0, 0));
         }
-        // console.debug("curr_a_arr - " + i);
-        // console.debug("start");
-        // console.debug(curr_a_arr[0]);
-        if (n === 2) {
-            const r_between01 = calc_r_between(r0_arr[0], r0_arr[1]);
-            const len_force01 = calc_force_kulona(q_arr[0], q_arr[1], r_between01);
-            const force01 = r0_arr[0].clone().sub(r0_arr[1].clone()).normalize().multiplyScalar(len_force01);
 
-            // вектор force01 изначально направлен так: 1 -> 0 ->
-            // значит если заряды одноимённые, то для 0-ой частицы вектор верный, а для 1-й его надо развернуть
-            // если же заряды разноимённые, то вектора надо просто развернуть
-            // аналогично для остальных сил и частиц
-            console.debug("len = " + len_force01);
-            curr_a_arr[0].add(force01.clone().divideScalar(m * Math.sign(q_arr[0] * q_arr[1])));
-            curr_a_arr[1].add(force01.clone().divideScalar(-m * Math.sign(q_arr[0] * q_arr[1])));
+        // считаем силу Кулона
+        if (n > 1) a_coulomb_arr = calculateCoulombForceForAllParticles(n, cur_pos_arr, q_arr, a_coulomb_arr, m)
 
-            if (n === 3) {
-                const r_between12 = calc_r_between(r0_arr[1], r0_arr[2]);
-                const len_force12 = calc_force_kulona(q_arr[1], q_arr[2], r_between12);
-                const force12 = r0_arr[1].clone().sub(r0_arr[2].clone()).normalize().multiplyScalar(len_force12);
-
-                curr_a_arr[1].add(force12.clone().divideScalar(m * Math.sign(q_arr[1] * q_arr[2])));
-                curr_a_arr[2].add(force12.clone().divideScalar(-m * Math.sign(q_arr[1] * q_arr[2])));
-
-                const r_between02 = calc_r_between(r0_arr[0], r0_arr[2]);
-                const len_force02 = calc_force_kulona(q_arr[0], q_arr[2], r_between02);
-                const force02 = r0_arr[0].clone().sub(r0_arr[2].clone()).normalize().multiplyScalar(len_force02);
-
-                curr_a_arr[0].add(force02.clone().divideScalar(m * Math.sign(q_arr[0] * q_arr[2])));
-                curr_a_arr[2].add(force02.clone().divideScalar(-m * Math.sign(q_arr[0] * q_arr[2])));
-            }
-        }
-        // console.debug("finish");
-        // console.debug(curr_a_arr[0]);
         // обновление данных позиции и скорости в массиве и хранилище
         for (let j = 0; j < n; j++) {
-            r0_arr[j].add(v0_arr[j].clone().multiplyScalar(allTime * i / parts)).add(curr_a_arr[j].clone().multiplyScalar(Math.pow(allTime * i / parts, 2) / 2));
-            v0_arr[j].add(curr_a_arr[j].clone().multiplyScalar(allTime * i / parts))
+            let united_a = a_electro_arr[j].clone().add(a_coulomb_arr[j].clone());
+            cur_pos_arr[j].add(cur_vel_arr[j].clone().multiplyScalar(allTime / parts)).add(united_a.clone().multiplyScalar(Math.pow(allTime / parts, 2) / 2));
+            cur_vel_arr[j].add(united_a.clone().multiplyScalar(allTime / parts))
 
-            if (r0_arr[j].z < 0) {
-                r0_arr[j].z = 0
+            if (cur_pos_arr[j].z < 0) {
+                cur_pos_arr[j].z = 0
             }
-            if (v0_arr[j].z < 0) {
-                v0_arr[j].z = 0
+            if (cur_vel_arr[j].z < 0) {
+                cur_vel_arr[j].z = 0
             }
 
-            positions[j].push(r0_arr[j].clone());
-            addPositionAndVelocity(i, r0_arr[j].clone(), v0_arr[j].clone(), allTime * i / parts, 3, dispatch, j);
+            positions[j].push(cur_pos_arr[j].clone());
+            addPositionAndVelocity(i, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), allTime * i / parts, 3, dispatch, j);
         }
 
-        i++;
     }
-
+// считаем силу Кулона
     for (let j = 0; j < n; j++) {
         // Добавление траектории в сцену
         addTrajectory(positions[j], 0xff0000, scene);
