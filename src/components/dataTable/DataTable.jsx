@@ -10,8 +10,8 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     const velocitiesFromStore = useSelector((state) => state.data.velocities);
 
     const [selectedTime, setSelectedTime] = useState(0);
-    const [currentPoint, setCurrentPoint] = useState([null, null, null]);
-    const [currentVelocity, setCurrentVelocity] = useState([null, null, null]);
+    // const [currentPoint, setCurrentPoint] = useState([null, null, null]);
+    // const [currentVelocity, setCurrentVelocity] = useState([null, null, null]);
     const [selectedData, setSelectedData] = useState({n: 0});
 
     // Определяем динамический maxTime по последнему значению time в positionsFromStore
@@ -62,33 +62,33 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
 
         // обновляем сцену:
         // 1. Удаляем предыдущие объекты
-        for (let i = 0; i < n; i++) {
-            if (currentPoint[i]) scene.remove(currentPoint[i]);
-            if (currentVelocity[i]) scene.remove(currentVelocity[i]);
-        }
+        // for (let i = 0; i < n; i++) {
+        //     if (currentPoint[i]) scene.remove(currentPoint[i]);
+        //     if (currentVelocity[i]) scene.remove(currentVelocity[i]);
+        // }
 
         // 2. Создаём новые
-        let newPoints = [];
-        let newVelocities = [];
-        for (let i = 0; i < n; i++) {
-            const curPos = new THREE.Vector3(arr_positions[i].x, arr_positions[i].y, arr_positions[i].z);
-            const curVel = new THREE.Vector3(arr_vels[i].x, arr_vels[i].y, arr_vels[i].z);
-
-            const newPoint = addPoint(0.01, 0x00ff00, curPos, scene);
-            const newVelocity = addVector(
-                curPos.clone(),
-                curPos.clone().add(curVel.clone().multiplyScalar(divideVelocity)),
-                0xffff00,
-                scene
-            );
-            newPoints.push(newPoint);
-            newVelocities.push(newVelocity);
-        }
-
-        setCurrentPoint(newPoints);
-        setCurrentVelocity(newVelocities);
-
-        animate(renderer, scene, camera);
+    //     let newPoints = [];
+    //     let newVelocities = [];
+    //     for (let i = 0; i < n; i++) {
+    //         const curPos = new THREE.Vector3(arr_positions[i].x, arr_positions[i].y, arr_positions[i].z);
+    //         const curVel = new THREE.Vector3(arr_vels[i].x, arr_vels[i].y, arr_vels[i].z);
+    //
+    //         const newPoint = addPoint(0.01, 0x00ff00, curPos, scene);
+    //         const newVelocity = addVector(
+    //             curPos.clone(),
+    //             curPos.clone().add(curVel.clone().multiplyScalar(divideVelocity)),
+    //             0xffff00,
+    //             scene
+    //         );
+    //         newPoints.push(newPoint);
+    //         newVelocities.push(newVelocity);
+    //     }
+    //
+    //     setCurrentPoint(newPoints);
+    //     setCurrentVelocity(newVelocities);
+    //
+    //     animate(renderer, scene, camera);
     };
 
     // Обработчик изменения слайдера
