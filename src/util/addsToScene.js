@@ -3,11 +3,11 @@ import {clearPositions, clearVelocity} from "../store/dataSlice";
 import {animate} from "./settingsScene";
 import {FontLoader, TextGeometry} from "three/addons";
 
-// Добавление плоскости по формуле Ax + By + Cz + D = 0
-export function addPlane(A, B, C, D, size, color, scene) {
+// добавление плоскости по формуле Ax + By + Cz + D = 0
+export function addPlane(A, B, C, D, size, scene) {
     const planeGeometry = new THREE.PlaneGeometry(size, size);
     const planeMaterial = new THREE.MeshBasicMaterial({
-        color: color,
+        color: 0x808080,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.4
@@ -15,11 +15,11 @@ export function addPlane(A, B, C, D, size, color, scene) {
 
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
-    // Нахождение нормали плоскости
+    // нахождение нормали плоскости
     const normal = new THREE.Vector3(A, B, C).normalize();
     plane.lookAt(normal);
 
-    // Смещение плоскости согласно D
+    // смещение плоскости согласно D
     plane.position.copy(normal.multiplyScalar(-D / normal.length()));
 
     scene.add(plane);

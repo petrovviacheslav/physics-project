@@ -49,7 +49,6 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
         const n = arr_positions.length;
 
         // Обновляем данные для таблицы
-        // Придумать как обновлять красиво таблицу, при этом учитывая количество используемых частиц
         setSelectedData({
             id: closest.id,
             arr_positions: arr_positions,

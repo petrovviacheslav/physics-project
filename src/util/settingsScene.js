@@ -27,10 +27,8 @@ export function default_scene(scene, renderer, camera) {
     if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
     parent.appendChild(renderer.domElement);
 
-    // Добавление координатных осей
     scene.add(new THREE.AxesHelper(1));
-
-    addBaseXYZ(scene, 10);
+    addBaseXYZ(scene, 1.1);
 
     camera.position.z = 4;
     camera.position.x = 3;

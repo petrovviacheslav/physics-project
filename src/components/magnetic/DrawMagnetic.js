@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {addBaseXYZ, addPlane, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
+import {addBaseXYZ, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
 import {add_renderer_to_dom, animate} from "../../util/settingsScene";
 import {addPositionAndVelocity} from "../../util/addsToStore";
 import {calculateCoulombForceForAllParticles} from "../../util/calculator";
@@ -7,23 +7,26 @@ import {calculateCoulombForceForAllParticles} from "../../util/calculator";
 export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstructionsFlag, scene, camera, renderer, dispatch) {
     console.debug('===================');
     console.debug('DrawMagnetic');
-    // Константы и данные
+    add_renderer_to_dom(renderer.domElement);
+
+    // константы
     const powTenQ = 1e-14;
     const powTenB = 1e-1;
     const powTenV0 = 1e1;
     // const powTenTime = 1e-1;
     const powTenTime = 1;
     const powTenM = 1e-16;
+    const is_monitor_length_preservation = true;
 
-    const m = 1.1 * powTenM; // масса частицы, кг
+    const m = 1.1 * powTenM; // масса всех частиц
     const B = new THREE.Vector3(powTenB * Number(induction_arr.induction_x), powTenB * Number(induction_arr.induction_y), powTenB * Number(induction_arr.induction_z)); // магнитное поле, Тл
+    const mainB = B.length();
 
     let q_arr = [];
     let cur_pos_arr = [];
     let cur_vel_arr = [];
     let start_pos_arr = [];
-    // количество используемых частиц
-    let n = 0;
+    let n = 0; // количество используемых частиц
 
     // распределение всех данных по нужным переменным и проверка, какие заряды задействуются
     for (let j = 0; j < particles_arr.length; j++) {
@@ -38,14 +41,12 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
         }
 
     }
+
     // делим время на столько частей
     const parts = 300;
     let allTime = Number(fallenTime) * powTenTime;
 
-    //=============
-    add_renderer_to_dom(renderer.domElement);
-    //=======================
-    // const positions_center = [];
+    const positions_center = [[], [], []];
     const positions = [[], [], []];
     // добавление начальных точек и скоростей в хранилище
     for (let j = 0; j < n; j++) {
@@ -53,41 +54,20 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
         addPositionAndVelocity(0, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), 0, 4, dispatch, j);
     }
 
-    // TODO: если заряд равен 0 то что-то интересное происходит... (реализовать)
+    // TODO: возможные проблемы - вектор скорости и магнитной индукции сонаправлены / скорость = 0 / вектор магнитной
+    //  индукции = 0? -> сила лоренца = 0 (может вылететь ошибка при подсчёте из-за деления на 0)
     // ============================
-    // база
-    const mainB = B.length();
-    const is_monitor_length_preservation = true;
-    // =======================
-
-    // const directionChecker = [
-    //     Math.sign(v0.x) * Math.sign(B.x) < 0,
-    //     Math.sign(v0.y) * Math.sign(B.y) < 0,
-    //     Math.sign(v0.z) * Math.sign(B.z) < 0
-    // ].filter(Boolean).length; // Считаем количество истинных значений
-    // let h = period * h_projection_v.length();
-    // if (directionChecker === 2 || directionChecker === 3) h = (-1) * h;
-    // const R_vector = directionForce.clone().normalize().multiplyScalar(mainR);
-    // const point_start_B = r0.clone().add(R_vector);
 
     for (let i = 1; i < parts; i++) {
+        // разложение вектора скорости на 2 составляющие, чтобы потом привести скорость к правильной длине
         let h_projection_v_arr = [];
         let plane_projection_v_arr = [];
-        // изначальные длины проекции скоростей на плоскость, перпендикулярную вектору магнитной индукции
+        // длина векторов из предыдущего массива
         let plane_projection_length_v_arr = [];
         let a_lorenz_arr = [];
         let a_coulomb_arr = [];
 
-        // useless
-        // let mainR_arr = [];
-        // let period_arr = [];
-        // let curDirectionForce_arr = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
-        // let curForceLength_arr = [];
-
         for (let j = 0; j < n; j++) {
-            // TODO: добавить проверку, что скорость > 10^-8 (машинная ошибка) иначе частица тупо стоит на месте
-            // TODO: добавить проверку, что projection.length() > 10^-8, иначе значит V и B сонаправлены, следовательно частица движется только под действием скорости
-
             const scalarMultiply = cur_vel_arr[j].x * B.x + cur_vel_arr[j].y * B.y + cur_vel_arr[j].z * B.z;
             const h_projection_v = B.clone().multiplyScalar(scalarMultiply / B.lengthSq());
             h_projection_v_arr.push(h_projection_v);
@@ -95,11 +75,6 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
             const plane_projection_v = cur_vel_arr[j].clone().sub(h_projection_v);
             plane_projection_v_arr.push(plane_projection_v.clone());
             plane_projection_length_v_arr.push(plane_projection_v.clone().length());
-
-            const mainR = m * plane_projection_v.length() / (mainB * q_arr[j]);
-            // mainR_arr.push(mainR);
-            const period = 2 * Math.PI * mainR / plane_projection_v.length();
-            // period_arr.push(period);
 
             // направление действия силы лоренца
             let cur_direction_lorenz = new THREE.Vector3();
@@ -113,16 +88,25 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
 
             // vector a = F/m
             a_lorenz_arr.push(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_lorenz_length / m));
-
             a_coulomb_arr.push(new THREE.Vector3(0, 0, 0));
 
+            const cur_radius_length = m * plane_projection_v.length() / (mainB * q_arr[j]);
+            positions_center[j].push(cur_pos_arr[j].clone().add(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_radius_length)));
+
+            if (i === 1 && addConstructionsFlag) {
+                // добавление проекции начального вектора скорости на вектор магнитной индукции
+                addVector(cur_pos_arr[j].clone(), cur_pos_arr[j].clone().add(h_projection_v.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
+                // добавление проекции начального вектора скорости на плоскость, перпендикулярную вектору магн индукции
+                addVector(cur_pos_arr[j].clone(), cur_pos_arr[j].clone().add(plane_projection_v.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
+                // добавление начального вектора скорости
+                addVector(cur_pos_arr[j].clone(), cur_pos_arr[j].clone().add(cur_vel_arr[j].clone().divideScalar(powTenV0)), 0xffff00, scene);
+            }
+            // const period = 2 * Math.PI * cur_radius_length / plane_projection_v.length();
             // console.debug("точка j = " + j + "; итерация = " + i)
             // console.debug("period = " + period + "; \nh_projection_v = " + h_projection_v.toArray() +
             //     "; \nplane_projection_v = " + plane_projection_v.toArray() + "; \ncur_direction_lorenz = " +
-            //     cur_direction_lorenz.toArray() + "; \nR = " + mainR);
+            //     cur_direction_lorenz.toArray() + "; \nR = " + cur_radius_length);
         }
-
-        // positions_center.push(curPosit.clone().add(curDirectionForce.clone().normalize().multiplyScalar(mainR)));
 
         // считаем силу Кулона
         if (n > 1) a_coulomb_arr = calculateCoulombForceForAllParticles(n, cur_pos_arr, q_arr, a_coulomb_arr, m)
@@ -145,34 +129,21 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
     }
 
     if (addConstructionsFlag) {
-    // Добавление проекции начального вектора скорости на вектор магнитной индукции
-    // addVector(r0.clone().add(projection.clone().divideScalar(powTenV0)), r0.clone().add(projection.clone().divideScalar(powTenV0)).add(h_projection_v.clone().divideScalar(powTenV0)), 0xffc0cb, scene);
-
-    // for (let j = 0; j < n; j++) {
-    // Добавление проекции начального вектора скорости на плоскость с нормалью - вектором магнитной индукции
-    // addVector(start_pos_arr[j].clone(), start_pos_arr[j].clone().add(projection_arr[j].clone().divideScalar(powTenV0)), 0xffc0cb, scene);
-    // }
-        // Добавление вектора индукции
+        // добавление вектора индукции
         addVector(new THREE.Vector3(0, 0, 0), (new THREE.Vector3(0, 0, 0)).add(B.clone().normalize()), 0xEE82EE, scene);
-    // Добавление начального вектора скорости
-    // addVector(r0.clone(), r0.clone().add(v0.clone().divideScalar(powTenV0)), 0xffff00, scene);
-    // Добавление R_vector (начальный)
-    // addVector(r0.clone(), r0.clone().add(R_vector.clone()), 0xffc0cb, scene);
-    // траектория центральных точек
-    // addTrajectory(positions_center, "green", scene)
+        for (let j = 0; j < n; j++) {
+            // добавление траектории центральных точек
+            addTrajectory(positions_center[j], "green", scene)
+        }
     }
 
-    // Добавление плоскости с нормалью - вектором магнитной индукции
-    // addPlane(B.x, B.y, B.z, D, 1, 0x808080, scene);
-
     for (let j = 0; j < n; j++) {
-        // Добавление траектории в сцену
+        // добавление траектории в сцену
         addTrajectory(positions[j], 0xff0000, scene);
-        // Добавление начальной точки
+        // добавление начальной точки
         addPoint(0.01, 0x4169E1, start_pos_arr[j], scene);
     }
 
-    // Добавление координатных осей
     scene.add(new THREE.AxesHelper(3));
     addBaseXYZ(scene, 3.1);
 
