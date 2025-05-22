@@ -3,15 +3,24 @@ import {addBaseXYZ} from "./addsToScene";
 import {OrbitControls} from "three/addons";
 
 // отрисовка сцены
-export function animate(renderer2, scene2, camera2) {
+export function animate(renderer2, scene2, camera2, flag) {
     const renderer = renderer2;
     const scene = scene2;
     const camera = camera2;
     const controls = new OrbitControls(camera, renderer.domElement);
 
+    const gridHelper = new THREE.GridHelper(20, 4);
+    scene.add(gridHelper);
+    const gridHelperXY = new THREE.GridHelper(20, 4);
+    gridHelperXY.rotation.x = Math.PI / 2; // Поворачиваем на 90 градусов вокруг оси X
+    scene.add(gridHelperXY);
+    const gridHelperYZ = new THREE.GridHelper(20, 4);
+    gridHelperYZ.rotation.z = Math.PI / 2; // Поворачиваем на 90 градусов вокруг оси Z
+    scene.add(gridHelperYZ);
+
     function animate2() {
         requestAnimationFrame(animate2);
-        controls.update();
+        if (flag) controls.update();
         renderer.render(scene, camera);
     }
 
@@ -34,7 +43,7 @@ export function default_scene(scene, renderer, camera) {
     camera.position.x = 3;
     camera.position.y = 3;
 
-    animate(renderer, scene, camera);
+    animate(renderer, scene, camera, true);
 }
 
 export function add_renderer_to_dom(child_elem) {

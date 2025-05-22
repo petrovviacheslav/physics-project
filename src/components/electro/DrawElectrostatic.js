@@ -89,7 +89,7 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
         // добавление траектории в сцену
         addTrajectory(positions[j], 0xff0000, scene);
         // добавление начальной точки
-        addPoint(0.01, 0x4169E1, start_pos_arr[j], scene);
+        addPoint(0.05, 0x4169E1, start_pos_arr[j], scene);
     }
 
     // добавление вектора напряжения из почти начальной точки
@@ -101,5 +101,5 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
     scene.add(new THREE.AxesHelper(3));
     addBaseXYZ(scene, 3.1);
 
-    animate(renderer, scene, camera);
+    animate(renderer, scene, camera, true);
 }

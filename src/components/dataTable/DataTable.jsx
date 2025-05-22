@@ -1,7 +1,6 @@
 import {useSelector} from "react-redux";
 import {useState, useEffect} from "react";
 import * as THREE from "three";
-import {animate} from "../../util/settingsScene";
 import {addPoint, addVector} from "../../util/addsToScene";
 
 
@@ -10,8 +9,8 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
     const velocitiesFromStore = useSelector((state) => state.data.velocities);
 
     const [selectedTime, setSelectedTime] = useState(0);
-    // const [currentPoint, setCurrentPoint] = useState([null, null, null]);
-    // const [currentVelocity, setCurrentVelocity] = useState([null, null, null]);
+    const [currentPoint, setCurrentPoint] = useState([null, null, null]);
+    const [currentVelocity, setCurrentVelocity] = useState([null, null, null]);
     const [selectedData, setSelectedData] = useState({n: 0});
 
     // Определяем динамический maxTime по последнему значению time в positionsFromStore
@@ -62,33 +61,33 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
 
         // обновляем сцену:
         // 1. Удаляем предыдущие объекты
-        // for (let i = 0; i < n; i++) {
-        //     if (currentPoint[i]) scene.remove(currentPoint[i]);
-        //     if (currentVelocity[i]) scene.remove(currentVelocity[i]);
-        // }
+        for (let i = 0; i < n; i++) {
+            if (currentPoint[i]) scene.remove(currentPoint[i]);
+            if (currentVelocity[i]) scene.remove(currentVelocity[i]);
+        }
 
         // 2. Создаём новые
-    //     let newPoints = [];
-    //     let newVelocities = [];
-    //     for (let i = 0; i < n; i++) {
-    //         const curPos = new THREE.Vector3(arr_positions[i].x, arr_positions[i].y, arr_positions[i].z);
-    //         const curVel = new THREE.Vector3(arr_vels[i].x, arr_vels[i].y, arr_vels[i].z);
-    //
-    //         const newPoint = addPoint(0.01, 0x00ff00, curPos, scene);
-    //         const newVelocity = addVector(
-    //             curPos.clone(),
-    //             curPos.clone().add(curVel.clone().multiplyScalar(divideVelocity)),
-    //             0xffff00,
-    //             scene
-    //         );
-    //         newPoints.push(newPoint);
-    //         newVelocities.push(newVelocity);
-    //     }
-    //
-    //     setCurrentPoint(newPoints);
-    //     setCurrentVelocity(newVelocities);
-    //
-    //     animate(renderer, scene, camera);
+        let newPoints = [];
+        let newVelocities = [];
+        for (let i = 0; i < n; i++) {
+            const curPos = new THREE.Vector3(arr_positions[i].x, arr_positions[i].y, arr_positions[i].z);
+            const curVel = new THREE.Vector3(arr_vels[i].x, arr_vels[i].y, arr_vels[i].z);
+
+            const newPoint = addPoint(0.01, 0x00ff00, curPos, scene);
+            const newVelocity = addVector(
+                curPos.clone(),
+                curPos.clone().add(curVel.clone().multiplyScalar(divideVelocity)),
+                0xffff00,
+                scene
+            );
+            newPoints.push(newPoint);
+            newVelocities.push(newVelocity);
+        }
+
+        setCurrentPoint(newPoints);
+        setCurrentVelocity(newVelocities);
+
+        // animate(renderer, scene, camera, true);
     };
 
     // Обработчик изменения слайдера
@@ -113,13 +112,14 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
             renderedItems.push(
                 <tr key={data.id + "_" + i}>
                     <td>{i}</td>
-                    <td>{data.arr_positions[i].x}</td>
-                    <td>{data.arr_positions[i].y}</td>
-                    <td>{data.arr_positions[i].z}</td>
-                    <td>{data.arr_vels[i].x}</td>
-                    <td>{data.arr_vels[i].y}</td>
-                    <td>{data.arr_vels[i].z}</td>
-                    <td>{data.time}</td>
+                    <td>{parseFloat(data.arr_positions[i].x)}</td>
+                    <td>{parseFloat(data.arr_positions[i].y)}</td>
+                    <td>{parseFloat(data.arr_positions[i].z)}</td>
+                    <td>{parseFloat(data.arr_vels[i].x)}</td>
+                    <td>{parseFloat(data.arr_vels[i].y)}</td>
+                    <td>{parseFloat(data.arr_vels[i].z)}</td>
+                    <td>{parseFloat(data.arr_vels[i].main)}</td>
+                    <td>{parseFloat(data.time)}</td>
                 </tr>
             );
         }
@@ -142,7 +142,6 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                 />
                 <span>{selectedTime.toFixed(2)}</span>
             </div>
-            {/*TODO: зафикировать ширину значений в ячейках таблицы, чтобы таблица не рябила*/}
             <div className="table-container">
                 <table className="data_table">
                     <thead>
@@ -154,6 +153,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                         <th>vel_x</th>
                         <th>vel_y</th>
                         <th>vel_z</th>
+                        <th>vel</th>
                         <th>time</th>
                     </tr>
                     </thead>

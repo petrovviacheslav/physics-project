@@ -54,6 +54,10 @@ const ManipulationMagneticForm = ({scene, camera, renderer}) => {
                 if (field === "need") {
                     return {...particle, [field]: value};
                 }
+
+                if (field === "discharge" && Math.abs(parseFloat(value)) < 0.1) {
+                    return {...particle, [field]: 0.1};
+                }
                 return {...particle, [field]: parseFloat(value)};
             }
             return particle;

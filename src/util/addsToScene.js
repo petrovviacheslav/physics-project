@@ -35,7 +35,7 @@ export function addTrajectory(positions, color, scene) {
 
 // добавление точки на сцену по координатам и радиусу
 export function addPoint(radius, color, coordinates, scene) {
-    const startPointGeometry = new THREE.SphereGeometry(0.01, 16, 16);
+    const startPointGeometry = new THREE.SphereGeometry(radius, 16, 16);
     const startPointMaterial = new THREE.MeshBasicMaterial({color: color});
     const startPoint = new THREE.Mesh(startPointGeometry, startPointMaterial);
     startPoint.position.set(coordinates.x, coordinates.y, coordinates.z);
@@ -75,7 +75,7 @@ export function clearCanvas(e, dispatch, scene, renderer, camera, only_clear) {
         scene.add(new THREE.AxesHelper(1));
         addBaseXYZ(scene, 1);
 
-        animate(renderer, scene, camera);
+        animate(renderer, scene, camera, true);
     }
 }
 
