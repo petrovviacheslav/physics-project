@@ -1,7 +1,8 @@
+// src/util/addsToScene.js
 import * as THREE from "three";
-import {clearPositions, clearVelocity} from "../store/dataSlice";
-import {animate} from "./settingsScene";
-import {FontLoader, TextGeometry} from "three/addons";
+import { clearPositions, clearVelocity } from "../store/dataSlice";
+import { animate } from "./settingsScene";
+// убрали отрисовку X, Y, Z из этого файла
 
 // добавление плоскости по формуле Ax + By + Cz + D = 0
 export function addPlane(A, B, C, D, size, scene) {
@@ -10,48 +11,79 @@ export function addPlane(A, B, C, D, size, scene) {
         color: 0x808080,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.4
+        opacity: 0.4,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
     });
 
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-
-    // нахождение нормали плоскости
     const normal = new THREE.Vector3(A, B, C).normalize();
     plane.lookAt(normal);
-
-    // смещение плоскости согласно D
     plane.position.copy(normal.multiplyScalar(-D / normal.length()));
-
     scene.add(plane);
 }
 
 // добавление траектории на сцену по массиву последовательных точек
 export function addTrajectory(positions, color, scene) {
-    const material = new THREE.LineBasicMaterial({color: color});//0xff0000
-    const geometry = new THREE.BufferGeometry().setFromPoints(positions.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+    const material = new THREE.LineBasicMaterial({
+        color,
+        linewidth: 2,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+    });
+    const geometry = new THREE.BufferGeometry().setFromPoints(
+        positions.map(p => new THREE.Vector3(p.x, p.y, p.z))
+    );
     const line = new THREE.Line(geometry, material);
+    line.renderOrder = 10;
     scene.add(line);
 }
 
 // добавление точки на сцену по координатам и радиусу
 export function addPoint(radius, color, coordinates, scene) {
-    const startPointGeometry = new THREE.SphereGeometry(radius, 16, 16);
-    const startPointMaterial = new THREE.MeshBasicMaterial({color: color});
-    const startPoint = new THREE.Mesh(startPointGeometry, startPointMaterial);
-    startPoint.position.set(coordinates.x, coordinates.y, coordinates.z);
-    scene.add(startPoint);
-
-    return startPoint;
+    const geometry = new THREE.SphereGeometry(radius, 16, 16);
+    const material = new THREE.MeshBasicMaterial({
+        color,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+    });
+    const point = new THREE.Mesh(geometry, material);
+    point.position.set(coordinates.x, coordinates.y, coordinates.z);
+    point.scale.set(1.2, 1.2, 1.2);
+    point.renderOrder = 10;
+    scene.add(point);
+    return point;
 }
-
 
 // добавление вектора на сцену по начальной и конечной точкам
 export function addVector(point1, point2, color, scene) {
-    const arrowHelper = new THREE.ArrowHelper(point2.clone().sub(point1.clone()).normalize(), point1, point2.clone().sub(point1.clone()).length(), color);
-    scene.add(arrowHelper);
-    return arrowHelper;
+    const direction = point2.clone().sub(point1).normalize();
+    const length = point2.clone().sub(point1).length();
+    const arrow = new THREE.ArrowHelper(direction, point1, length, color);
+    if (arrow.line) {
+        arrow.line.material.linewidth = 2;
+        arrow.line.material.polygonOffset = true;
+        arrow.line.material.polygonOffsetFactor = -1;
+        arrow.line.material.polygonOffsetUnits = -1;
+        arrow.line.renderOrder = 10;
+    }
+    arrow.children.forEach(child => {
+        if (child instanceof THREE.Mesh) {
+            child.scale.set(1.2, 1.2, 1.2);
+            if (child.material) {
+                child.material.polygonOffset = true;
+                child.material.polygonOffsetFactor = -1;
+                child.material.polygonOffsetUnits = -1;
+            }
+            child.renderOrder = 10;
+        }
+    });
+    scene.add(arrow);
+    return arrow;
 }
-
 
 // полная очистка сцены и отрисовка только координатных осей
 export function clearCanvas(e, dispatch, scene, renderer, camera, only_clear) {
@@ -59,49 +91,30 @@ export function clearCanvas(e, dispatch, scene, renderer, camera, only_clear) {
     dispatch(clearPositions());
     dispatch(clearVelocity());
 
-    while (scene.children.length !== 0) {
-        scene.children.forEach((child) => {
-            scene.remove(child);
-        });
-    }
+    scene.children.slice().forEach(child => {
+        if (child.geometry && child.geometry.type === 'TextGeometry') {
+            return; // не удаляем текстовые метки
+        }
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+        }
+        scene.remove(child);
+    });
 
-    // если установлен флаг, то надо просто удалить все элементы со сцены
     if (!only_clear) {
         let parent = document.querySelector(".render_place");
         if (parent.firstElementChild) parent.removeChild(parent.firstElementChild);
         parent.appendChild(renderer.domElement);
 
-        // Добавление координатных осей
-        scene.add(new THREE.AxesHelper(1));
-        addBaseXYZ(scene, 1);
+        const axes = new THREE.AxesHelper(1);
+        axes.material.polygonOffset = true;
+        axes.material.polygonOffsetFactor = -1;
+        axes.material.polygonOffsetUnits = -1;
+        axes.renderOrder = 5;
+        scene.add(axes);
 
         animate(renderer, scene, camera, true);
     }
-}
-
-// добавление подписей координатных осей на сцену с определённой длиной
-export function addBaseXYZ(scene, len) {
-    addLabel('X', new THREE.Vector3(len, 0, 0), scene);
-    addLabel('Y', new THREE.Vector3(0, len, 0), scene);
-    addLabel('Z', new THREE.Vector3(0, 0, len), scene);
-}
-
-// добавление подписи на сцену по координатам
-export function addLabel(text, position, scene) {
-    const loader = new FontLoader();
-    loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-        const textGeometry = new TextGeometry(text, {
-            font: font,
-            size: 0.05,
-            depth: 0.01,
-            curveSegments: 12,
-            bevelEnabled: false,
-        });
-
-        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-        textMesh.position.copy(position);
-        textMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)); // Поворачиваем текст
-        scene.add(textMesh);
-    });
 }

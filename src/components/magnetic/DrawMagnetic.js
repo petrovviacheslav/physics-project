@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {addBaseXYZ, addPoint, addTrajectory, addVector} from "../../util/addsToScene";
+import {addPoint, addTrajectory, addVector} from "../../util/addsToScene";
 import {add_renderer_to_dom, animate} from "../../util/settingsScene";
 import {addPositionAndVelocity} from "../../util/addsToStore";
 import {calculateCoulombForceForAllParticles} from "../../util/calculator";
@@ -159,7 +159,7 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
     }
 
     scene.add(new THREE.AxesHelper(3));
-    addBaseXYZ(scene, 3.1);
+    // addBaseXYZ(scene, 3.1);
 
     animate(renderer, scene, camera);
 }
