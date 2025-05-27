@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/physics-project/static/css/main.0ab0f304.css",
-    "main.js": "/physics-project/static/js/main.1c64c63b.js",
+    "main.js": "/physics-project/static/js/main.0f449553.js",
     "index.html": "/physics-project/index.html",
     "main.0ab0f304.css.map": "/physics-project/static/css/main.0ab0f304.css.map",
-    "main.1c64c63b.js.map": "/physics-project/static/js/main.1c64c63b.js.map"
+    "main.0f449553.js.map": "/physics-project/static/js/main.0f449553.js.map"
   },
   "entrypoints": [
     "static/css/main.0ab0f304.css",
-    "static/js/main.1c64c63b.js"
+    "static/js/main.0f449553.js"
   ]
 }
