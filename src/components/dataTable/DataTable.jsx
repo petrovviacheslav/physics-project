@@ -136,7 +136,7 @@ const DataTable = ({scene, camera, renderer, divideVelocity}) => {
                     id="time_slider"
                     min="0"
                     max={maxTime}
-                    step={maxTime / 200} /* динамический шаг */
+                    step={maxTime / 350} /* динамический шаг */
                     value={selectedTime}
                     onChange={updateTime}
                 />

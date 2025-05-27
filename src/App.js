@@ -6,6 +6,7 @@ import Magnetic from "./components/magnetic/Magnetic";
 import {HashRouter as Router, Route, Routes} from 'react-router-dom'
 import Nav from "./components/nav/Nav";
 import Header from "./components/updown/Header";
+import Electromagnetic from "./components/electromagnetic/Electromagnetic";
 
 
 function App() {
@@ -23,14 +24,13 @@ function App() {
         )
     }
 
-    // все стили для Magnetic, Electro в App.css, может их надо перенести?
     return (
 
         <Router>
             <Routes>
                 <Route path="/magnetic" element={createPage(<Magnetic/>)}/>
                 <Route path="/electro" element={createPage(<Electro/>)}/>
-                {/*<Route path="/electro-magnetic" element={createPage(<div>lol</div>)}/>*/}
+                <Route path="/electro-magnetic" element={createPage(<Electromagnetic/>)}/>
             </Routes>
         </Router>
 

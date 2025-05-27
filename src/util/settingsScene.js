@@ -18,7 +18,7 @@ function addScaleLabels(scene, size = 20, divisions = 20) {
             const textGeom = new TextGeometry(labelText, {
                 font: font,
                 size: 0.2,        // размер цифр
-                height: 0.02,
+                depth: 0.02,
                 curveSegments: 8,
                 bevelEnabled: false,
             });
@@ -55,7 +55,7 @@ function addScaleLabels(scene, size = 20, divisions = 20) {
             const bigGeom = new TextGeometry(text, {
                 font: font,
                 size: 0.4,       // в два раза больше
-                height: 0.02,
+                depth: 0.02,
                 curveSegments: 8,
                 bevelEnabled: false,
             });
