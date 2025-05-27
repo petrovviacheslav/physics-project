@@ -289,7 +289,7 @@ const ManipulationElectromagneticForm = ({scene, camera, renderer}) => {
                 </table>
 
                 {/* Отдельная таблица для магнитной индукции */}
-                <h2>Вектор магнитной индукции:</h2>
+                <h2>Вектор магнитной индукции (зелёная стрелка):</h2>
                 <table className="vector-table">
                     <thead>
                     <tr>
@@ -345,7 +345,7 @@ const ManipulationElectromagneticForm = ({scene, camera, renderer}) => {
                     </tbody>
                 </table>
 
-                <h2>Вектор напряжённости поля:</h2>
+                <h2>Вектор напряжённости поля (фиолетовая стрелка):</h2>
                 <table className="vector-table">
                     <thead>
                     <tr>

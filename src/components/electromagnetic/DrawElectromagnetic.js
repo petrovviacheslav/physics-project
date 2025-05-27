@@ -50,17 +50,12 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
     const parts = 350;
     let allTime = Number(fallenTime);
 
-    // const positions_center = [[], [], []];
     const positions = [[], [], []];
     // добавление начальных точек и скоростей в хранилище
     for (let j = 0; j < n; j++) {
         positions[j].push(cur_pos_arr[j].clone());
         addPositionAndVelocity(0, cur_pos_arr[j].clone(), cur_vel_arr[j].clone(), 0, 4, dispatch, j);
     }
-
-    // if (n === 1 && (Math.abs(cur_vel_arr[0].x) < 1e-8 && Math.abs(cur_vel_arr[0].y) < 1e-8 && Math.abs(cur_vel_arr[0].z) < 1e-8)) {
-    //     alert("Только одна точка, она не сдвинулась с места");
-    // }
 
     // ============================
 
@@ -80,7 +75,6 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
         }
 
         for (let j = 0; j < n; j++) {
-
             const scalarMultiply = cur_vel_arr[j].x * B.x + cur_vel_arr[j].y * B.y + cur_vel_arr[j].z * B.z;
             const h_projection_v = B.clone().multiplyScalar(scalarMultiply / B.lengthSq());
             h_projection_v_arr.push(h_projection_v);
@@ -101,7 +95,7 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
             const cur_lorenz_length = q_arr[j] * cur_vel_arr[j].length() * mainB * sinVB;
 
             // vector a = F/m
-            if (B_equal_0 || cur_vel_arr[j].length() < 10-8) a_lorenz_arr.push(new THREE.Vector3(0, 0, 0));
+            if (B_equal_0 || cur_vel_arr[j].length() < 10e-8) a_lorenz_arr.push(new THREE.Vector3(0, 0, 0));
             else a_lorenz_arr.push(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_lorenz_length / m));
 
 
@@ -114,6 +108,7 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
                 }
                 // добавление начального вектора скорости
                 addVector(cur_pos_arr[j].clone(), cur_pos_arr[j].clone().add(cur_vel_arr[j].clone().divideScalar(powTenV0)), 0xffff00, scene);
+
             }
             // const period = 2 * Math.PI * cur_radius_length / plane_projection_v.length();
             // console.debug("точка j = " + j + "; итерация = " + i)
@@ -130,7 +125,7 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
             let united_a = a_electro_arr[j].clone().add(a_coulomb_arr[j].clone().add(a_lorenz_arr[j].clone()));
             cur_pos_arr[j].add(cur_vel_arr[j].clone().multiplyScalar(allTime / parts)).add(united_a.multiplyScalar(Math.pow(allTime / parts, 2) / 2));
 
-            if (!B_equal_0 || cur_vel_arr[j].length() > 10-8) {
+            if (!B_equal_0 && cur_vel_arr[j].length() > 10e-8) {
                 // приведение той части, которая находится в плоскости перпендикулярной вектору магнитной индукции
                 plane_projection_v_arr[j].add(a_lorenz_arr[j].clone().multiplyScalar(allTime / parts));
                 if (is_monitor_length_preservation) plane_projection_v_arr[j].normalize().multiplyScalar(plane_projection_length_v_arr[j]);
@@ -154,9 +149,10 @@ export function DrawElectromagnetic(particles_arr, induction_arr, tension_arr, f
     // добавление вектора напряжения из почти начальной точки
     addVector(new THREE.Vector3(0, 0, 0), E.clone().divideScalar(powTenE), 0xEE82EE, scene);
 
-    // добавление вектора индукции
-    addVector(new THREE.Vector3(0, 0, 0), (new THREE.Vector3(0, 0, 0)).add(B.clone().normalize()), "green", scene);
-
+    if (!B_equal_0) {
+        // добавление вектора индукции
+        addVector(new THREE.Vector3(0, 0, 0), (new THREE.Vector3(0, 0, 0)).add(B.clone().normalize()), "green", scene);
+    }
 
     scene.add(new THREE.AxesHelper(3));
     // addBaseXYZ(scene, 3.1);

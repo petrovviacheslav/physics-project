@@ -47,7 +47,7 @@ export default function DrawElectrostatic(particles_arr, tension_arr, gravity, f
     }
 
     // делим время на столько частей
-    const parts = 200;
+    const parts = 350;
     let allTime = Number(fallenTime);
 
     const positions = [[], [], []];

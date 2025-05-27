@@ -43,7 +43,7 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
 
     }
     // делим время на столько частей
-    const parts = 300;
+    const parts = 350;
     let allTime = Number(fallenTime) * powTenTime;
 
     const positions_center = [[], [], []];
@@ -90,12 +90,12 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
             const cur_lorenz_length = q_arr[j] * cur_vel_arr[j].length() * mainB * sinVB;
 
             // vector a = F/m
-            if (B_equal_0 || cur_vel_arr[j].length() < 10-8) a_lorenz_arr.push(new THREE.Vector3(0, 0, 0));
+            if (B_equal_0 || cur_vel_arr[j].length() < 10e-8) a_lorenz_arr.push(new THREE.Vector3(0, 0, 0));
             else a_lorenz_arr.push(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_lorenz_length / m));
 
             a_coulomb_arr.push(new THREE.Vector3(0, 0, 0));
 
-            if (!B_equal_0 || cur_vel_arr[j].length() > 10-8) {
+            if (!B_equal_0 && cur_vel_arr[j].length() > 10e-8) {
                 const cur_radius_length = m * plane_projection_v.length() / (mainB * q_arr[j]);
                 positions_center[j].push(cur_pos_arr[j].clone().add(cur_direction_lorenz.clone().normalize().multiplyScalar(cur_radius_length)));
             }
@@ -125,7 +125,7 @@ export function DrawMagnetic(particles_arr, induction_arr, fallenTime, addConstr
             let united_a = a_coulomb_arr[j].clone().add(a_lorenz_arr[j].clone());
             cur_pos_arr[j].add(cur_vel_arr[j].clone().multiplyScalar(allTime / parts)).add(united_a.multiplyScalar(Math.pow(allTime / parts, 2) / 2));
 
-            if (!B_equal_0 || cur_vel_arr[j].length() > 10-8) {
+            if (!B_equal_0 && cur_vel_arr[j].length() > 10e-8) {
                 // приведение той части, которая находится в плоскости перпендикулярной вектору магнитной индукции
                 plane_projection_v_arr[j].add(a_lorenz_arr[j].clone().multiplyScalar(allTime / parts));
                 if (is_monitor_length_preservation) plane_projection_v_arr[j].normalize().multiplyScalar(plane_projection_length_v_arr[j]);
