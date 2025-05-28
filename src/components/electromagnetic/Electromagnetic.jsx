@@ -20,7 +20,7 @@ const Electromagnetic = () => {
 
     return (
         <div className="magnetic">
-            <h1>Магнитное поле</h1>
+            <h1>Электромагнитное поле</h1>
             <div className="container">
                 <div className="render_place"></div>
                 <div className="form_base">
